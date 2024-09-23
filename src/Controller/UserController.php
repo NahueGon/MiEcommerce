@@ -38,7 +38,6 @@ class UserController extends AbstractController
         $form = $this->createForm(UserType::class, $user, [
             'is_edit' => true
         ]);
-
         return $this->render('user/edit.html.twig',[
             'title' => 'Editar',
             'form' => $form->createView(),
@@ -50,11 +49,16 @@ class UserController extends AbstractController
     #[Route('/user/update/{id}', name: 'user_update')]
     public function update(User $user, Request $request, UserPasswordHasherInterface $passwordHasher)
     {
+        $oldEmail = $user->getEmail();
+        $oldName = $user->getName();
+        $oldLastname = $user->getLastname();
+        $oldGender = $user->getGender();
+
         $form = $this->createForm(UserType::class, $user, [
             'is_edit' => true
         ]);
         $form->handleRequest($request);
-        
+
         if($form->isSubmitted() && $form->isValid()){
             $plaintextOldPassword = $form->get('old_password')->getData();
             $plaintextNewPassword = $form->get('new_password')->getData();
@@ -80,6 +84,7 @@ class UserController extends AbstractController
             }
 
             if (!empty($plaintextOldPassword) && !empty($plaintextNewPassword)) {
+
                 $isValidPassword = $passwordHasher->isPasswordValid($user, $plaintextOldPassword);
                 
                 if (!$isValidPassword)
@@ -97,21 +102,48 @@ class UserController extends AbstractController
                 $hashedNewPassword = $passwordHasher->hashPassword($user, $plaintextNewPassword);
                 $user->setPassword($hashedNewPassword);
             }
+
             
             $data = $form->getData();
+            $changes = false;
 
-            $user->setName($data->getName());
-            $user->setLastname($data->getLastname());
-            $user->setEmail($data->getEmail());
-            $user->setGender($data->getGender());
+            if ($oldEmail !== $data->getEmail()) {
+                $user->setEmail($data->getEmail());
 
-            $this->em->persist($user);
-            $this->em->flush();
+                $this->em->persist($user);
+                $this->em->flush();
 
-            flash()
-                ->option('position', 'bottom-right')
-                ->option('timeout', 3000)
-                ->success('Usuario editado correctamente.');
+                flash()
+                    ->option('position', 'bottom-right')
+                    ->option('timeout', 3000)
+                    ->success('Email actualizado, vuelve a iniciar sesión.');
+            }
+
+            if ($oldName !== $data->getName()) {
+                $user->setName($data->getName());
+                $changes = true;
+            }
+
+            if ($oldLastname !== $data->getLastname()) {
+                $user->setLastname($data->getLastname());
+                $changes = true;
+            }
+
+            if ($oldGender !== $data->getGender()) {
+                $user->setGender($data->getGender());
+                $changes = true;
+            }
+
+            if ($changes) {
+                $this->em->persist($user);
+                $this->em->flush();
+
+                flash()
+                    ->option('position', 'bottom-right')
+                    ->option('timeout', 3000)
+                    ->success('Usuario editado correctamente.');
+            }
+
 			
 			return $this->redirect($this->generateUrl('user_show', [
 				'id' => $user->getId()
