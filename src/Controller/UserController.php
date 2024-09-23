@@ -116,7 +116,7 @@ class UserController extends AbstractController
                 flash()
                     ->option('position', 'bottom-right')
                     ->option('timeout', 3000)
-                    ->success('Email actualizado, vuelve a iniciar sesión.');
+                    ->success('Email actualizado');
             }
 
             if ($oldName !== $data->getName()) {
