@@ -1,0 +1,14 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    {{title}}
+{% endblock %}
+
+{% block body %}
+    <p>{{user.name}}</p>
+    <p>{{user.lastname}}</p>
+    <p>{{user.email}}</p>
+    <p>{{user.gender}}</p>
+
+<a type="button" href="{{ path('user_edit', {'id':user.id}) }}" class="btn btn-warning">Editar</a>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    {{ title }}
+{% endblock %}
+
+{% block body %}
+
+<div class="border border-light p-3">
+    <div class="border-bottom mb-2">
+        <h1>{{title}} Usuario</h1>
+    </div>
+    <div class="row">
+    {{ form_start(form, {
+        'action': path('user_update', { 'id': user.id }),
+        'method': 'POST',
+        attr: { 'data-turbo': 'false' }
+    })}}
+
+        <div class="mb-3">
+            <div class="form-group">
+                {{form_row(form.name)}}
+            </div>
+        </div>
+        <div class="mb-3">
+            <div class="form-group">
+                {{form_row(form.lastname)}}
+            </div>
+        </div>
+        <div class="mb-3">
+            <div class="form-group">
+                {{form_row(form.email)}}
+            </div>
+        </div>
+        <div class="mb-3">
+            <div class="form-group">
+                {{form_row(form.gender)}}
+            </div>
+        </div>
+        <div class="mb-3">
+            <div class="form-group">
+                {{ form_row(form.old_password) }}
+            </div>
+        </div>
+        <div class="mb-3">
+            <div class="form-group">
+                {{ form_row(form.new_password) }}
+            </div>
+        </div>
+    {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}

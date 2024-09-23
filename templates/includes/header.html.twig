@@ -1,0 +1,43 @@
+<header>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ path('home') }}">MiEcommerce</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ path('home') }}"></a>
+                    </li>
+                </ul>
+
+                {# <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">
+                    <input type="search" class="form-control" placeholder="Search..." aria-label="Search">
+                </form> #}
+            
+                <div class="dropdown text-end">
+                    {% if app.user %}
+                        <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="https://github.com/mdo.png" alt="Perfil Image" width="32" height="32" class="rounded-circle">
+                        </a>
+                        <ul class="dropdown-menu text-small">
+                            <li><a class="dropdown-item" href="{{ path('user_show', {'id':app.user.id}) }}">{{app.user.name}} {{app.user.lastname}}</a></li>
+                            {% if 'ROLE_ADMIN' in app.user.roles %}
+                                <li><a class="nav-link" href="{{ path('admin_dashboard') }}">Administrador</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="nav-link" href="{{ path('user_logout') }}">Cerrar Sesion</a></li>
+                        </ul>
+                    {% else %}
+                        <div class="text-end">
+                            <a type="button" href="{{ path('user_login') }}" class="btn btn-outline-light me-2">Iniciar Sesion</a>
+                            <a type="button" href="{{ path('user_register') }}" class="btn btn-warning">Registrarme</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
