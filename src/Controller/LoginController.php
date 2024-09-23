@@ -22,6 +22,7 @@ class LoginController extends AbstractController
         }
         if($user){
             flash()
+                ->title('Exito!')
                 ->option('position', 'bottom-right')
                 ->option('timeout', 3000)
                 ->success('Inicio de sesion exitoso.');

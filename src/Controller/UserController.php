@@ -65,9 +65,9 @@ class UserController extends AbstractController
 
             if(empty($plaintextOldPassword) && !empty($plaintextNewPassword)){
                 flash()
-                ->option('position', 'bottom-right')
-                ->option('timeout', 3000)
-                ->error('Necesitas completar el campo Contraseña Actual.');
+                    ->option('position', 'bottom-right')
+                    ->option('timeout', 3000)
+                    ->error('Necesitas completar el campo Contraseña Actual.');
                 return $this->redirect($this->generateUrl('user_edit', [
                     'id' => $user->getId()
                 ]));
@@ -75,9 +75,9 @@ class UserController extends AbstractController
 
             if(!empty($plaintextOldPassword) && empty($plaintextNewPassword)){
                 flash()
-                ->option('position', 'bottom-right')
-                ->option('timeout', 3000)
-                ->error('Necesitas completar el campo Contraseña Nueva.');
+                    ->option('position', 'bottom-right')
+                    ->option('timeout', 3000)
+                    ->error('Necesitas completar el campo Contraseña Nueva.');
                 return $this->redirect($this->generateUrl('user_edit', [
                     'id' => $user->getId()
                 ]));
@@ -114,6 +114,7 @@ class UserController extends AbstractController
                 $this->em->flush();
 
                 flash()
+                    ->title('Exito!')
                     ->option('position', 'bottom-right')
                     ->option('timeout', 3000)
                     ->success('Email actualizado');
@@ -139,6 +140,7 @@ class UserController extends AbstractController
                 $this->em->flush();
 
                 flash()
+                    ->title('Exito!')
                     ->option('position', 'bottom-right')
                     ->option('timeout', 3000)
                     ->success('Usuario editado correctamente.');
