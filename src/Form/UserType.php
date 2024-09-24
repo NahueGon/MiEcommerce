@@ -7,10 +7,12 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Validator\Constraints\File;
 
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -50,11 +52,6 @@ class UserType extends AbstractType
             ],
             'attr' => [
                 'placeholder' => 'Email'
-            ],
-            'constraints' => [
-                new Assert\NotBlank([
-                    'message' => 'Este campo es obligatorio'
-                ])
             ]
         ])
         ->add('gender', ChoiceType::class, [
@@ -66,7 +63,26 @@ class UserType extends AbstractType
             'choices' => [
                 'Hombre' => 'masculino',
                 'Mujer' => 'femenino',
+                'Otro' => 'otro'
             ]
+        ])
+        ->add('img_profile', FileType::class, [
+            'label' => false,
+            'required' => $options['is_edit'] ? true : false,
+            'constraints' => [
+                new File([
+                    'maxSize' => '1024k',
+                    'maxSizeMessage' => 'Es demaisado pesada la imagen',
+                    'mimeTypes' => [
+                            'image/jpg',
+                            'image/jpeg',
+                            'image/png',
+                            'image/gif',
+                            'image/jfif',
+                    ],
+                    'mimeTypesMessage' => 'Por favor sube un formato valido de imagen',
+                ])
+            ],
         ]);
 
         if (!$options['is_edit']) {

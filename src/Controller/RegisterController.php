@@ -12,13 +12,19 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\Entity\User;
 use App\Form\UserType;
 
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\String\Slugger\SluggerInterface;
+
 class RegisterController extends AbstractController
 {
     private $em;
 
-    public function __construct(EntityManagerInterface $em)
+    public function __construct(EntityManagerInterface $em, SluggerInterface $slugger)
     {
         $this->em = $em;
+        $this->slugger = $slugger;
     }
 
     #[Route('/register', name: 'user_register')]
@@ -32,15 +38,19 @@ class RegisterController extends AbstractController
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid()){
-            $this->saveUser($form, $user, $passwordHasher);
-
+            $this->saveUser(
+                $form,
+                $user,
+                $passwordHasher,
+                $this->getParameter('kernel.project_dir') . '/public/uploads/images',
+                $this->slugger
+            );
             flash()
                 ->title('Exito!')
-                ->option('position', 'bottom-right')
                 ->option('timeout', 3000)
                 ->success('Usuario registrado correctamente');
                 
-            return $this->redirect($this->generateUrl('user_login'));
+            return $this->redirectToRoute('user_login');
 		}
 
         return $this->render('register/index.html.twig', [
@@ -49,8 +59,22 @@ class RegisterController extends AbstractController
         ]);
     }
 
-    public function saveUser($form, User $user, UserPasswordHasherInterface $passwordHasher)
+    public function saveUser($form, User $user, UserPasswordHasherInterface $passwordHasher, #[Autowire('%kernel.project_dir%/public/uploads/images')] string $imagesDirectory)
     {
+        $imageFile = $form->get('img_profile')->getData();
+        if ($imageFile) {
+            $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+            $safeFilename = $this->slugger->slug($originalFilename);
+            $newFilename = $safeFilename.'-'.uniqid().'.'.$imageFile->guessExtension();
+            try {
+                $imageFile->move($imagesDirectory, $newFilename);
+            } catch (FileException $e) {
+                // ... handle exception if something happens during file upload
+            }
+            $user->setImgProfile($newFilename);
+    
+        }
+        
         $data = $form->getData();
 
         $plaintextPassword = $data->getPassword();

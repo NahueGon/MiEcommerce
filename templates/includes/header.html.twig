@@ -20,7 +20,7 @@
                 <div class="dropdown text-end">
                     {% if app.user %}
                         <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src="https://github.com/mdo.png" alt="Perfil Image" width="32" height="32" class="rounded-circle">
+                            <img src="{{ app.user.imgProfile ? asset('uploads/images/' ~ app.user.imgProfile) : asset('uploads/images/defaultMaleImageProfile.jpg') }}" alt="Perfil Image" width="32" height="32" class="rounded-circle">
                         </a>
                         <ul class="dropdown-menu text-small">
                             <li><a class="dropdown-item" href="{{ path('user_show', {'id':app.user.id}) }}">{{app.user.name}} {{app.user.lastname}}</a></li>

@@ -50,6 +50,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $created_at = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $img_profile = null;
+
     public function __construct()
     {
         $this->roles = ['ROLE_USER'];
@@ -226,5 +229,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $metadata->addPropertyConstraint('gender', new Assert\NotBlank([
             'message' => 'Este campo es obligatorio'
         ]));
+    }
+
+    public function getImgProfile(): ?string
+    {
+        return $this->img_profile;
+    }
+
+    public function setImgProfile(?string $img_profile): static
+    {
+        $this->img_profile = $img_profile;
+
+        return $this;
     }
 }
