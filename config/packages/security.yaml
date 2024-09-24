@@ -20,10 +20,13 @@ security:
                 login_path: user_login
                 check_path: user_login
                 enable_csrf: true
+                default_target_path: home
             logout:
                 path: user_logout
                 # where to redirect after logout
                 target: user_login
+            custom_authenticators:
+                - App\Security\LoginFormAuthenticator
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall

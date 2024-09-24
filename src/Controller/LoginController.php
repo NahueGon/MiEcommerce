@@ -13,24 +13,9 @@ class LoginController extends AbstractController
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
         $error = $authenticationUtils->getLastAuthenticationError();
-        $user = $this->getUser();
-        if ($error) {
-            flash()
-                ->option('position', 'bottom-right')
-                ->option('timeout', 3000)
-                ->error('Credenciales incorrectas, por favor intenta nuevamente.');
-        }
-        if($user){
-            flash()
-                ->title('Exito!')
-                ->option('position', 'bottom-right')
-                ->option('timeout', 3000)
-                ->success('Inicio de sesion exitoso.');
-            return $this->redirect($this->generateUrl('home'));
-        }
         $lastUsername = $authenticationUtils->getLastUsername();
+
         return $this->render('login/login.html.twig', [
-            'user' => $user,
             'username' => $lastUsername,
             'title' => 'Iniciar Sesión'
         ]);
