@@ -16,6 +16,15 @@
         'method': 'POST',
         attr: { 'data-turbo': 'false' }
     })}}
+        <div class="mb-3">
+            <img width="250" src="{{ user.imgProfile
+                            ? asset('uploads/images/' ~ user.imgProfile)
+                            : (user.gender == 'masculino')
+                                ? asset('uploads/images/defaultMaleImageProfile.svg') 
+                                : asset('uploads/images/defaultFemaleImageProfile.svg')
+                            }}" alt="">
+            {{form_row(form.img_profile)}}
+        </div>
 
         <div class="mb-3">
             <div class="form-group">

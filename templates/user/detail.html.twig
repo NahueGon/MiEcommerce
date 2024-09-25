@@ -5,6 +5,7 @@
 {% endblock %}
 
 {% block body %}
+    <img width="250" src="{{ app.user.imgProfile ? asset('uploads/images/' ~ app.user.imgProfile) : asset('uploads/images/defaultMaleImageProfile.jpg') }}" alt="">
     <p>{{user.name}}</p>
     <p>{{user.lastname}}</p>
     <p>{{user.email}}</p>

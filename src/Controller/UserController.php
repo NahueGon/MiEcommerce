@@ -6,20 +6,24 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\Request;
-
 use App\Entity\User;
 use App\Form\UserType;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 class UserController extends AbstractController
 {
     private $em;
 
-    public function __construct(EntityManagerInterface $em)
+    public function __construct(EntityManagerInterface $em, SluggerInterface $slugger)
     {
         $this->em = $em;
+        $this->slugger = $slugger;
     }
 
     #[Route('/user/show/{id}', name: 'user_show')]
@@ -47,19 +51,42 @@ class UserController extends AbstractController
     }
 
     #[Route('/user/update/{id}', name: 'user_update')]
-    public function update(User $user, Request $request, UserPasswordHasherInterface $passwordHasher)
+    public function update(User $user, Request $request, UserPasswordHasherInterface $passwordHasher,  #[Autowire('%kernel.project_dir%/public/uploads/images')] string $imagesDirectory)
     {
         $oldEmail = $user->getEmail();
         $oldName = $user->getName();
         $oldLastname = $user->getLastname();
         $oldGender = $user->getGender();
-
+        
         $form = $this->createForm(UserType::class, $user, [
             'is_edit' => true
         ]);
         $form->handleRequest($request);
-
+        
         if($form->isSubmitted() && $form->isValid()){
+            $changes = false;
+
+            $imageFile = $form->get('img_profile')->getData();
+            if ($imageFile) {
+                $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+                $safeFilename = $this->slugger->slug($originalFilename);
+                $newFilename = $safeFilename.'-'.uniqid().'.'.$imageFile->guessExtension();
+                try {
+                    $this->resizeAndSaveImage($imageFile, $imagesDirectory . '/' . $newFilename);
+                    $user->setImgProfile($newFilename);
+                    $changes = true;
+                } catch (FileException $e) {
+                   // Manejo de excepciones durante la carga del archivo
+                    flash()
+                        ->option('position', 'bottom-right')
+                        ->option('timeout', 3000)
+                        ->error('Error al subir la imagen.');
+                    return $this->redirect($this->generateUrl('user_edit', [
+                        'id' => $user->getId()
+                    ]));
+                }
+            }
+
             $plaintextOldPassword = $form->get('old_password')->getData();
             $plaintextNewPassword = $form->get('new_password')->getData();
 
@@ -105,7 +132,6 @@ class UserController extends AbstractController
 
             
             $data = $form->getData();
-            $changes = false;
 
             if ($oldEmail !== $data->getEmail()) {
                 $user->setEmail($data->getEmail());
@@ -138,7 +164,6 @@ class UserController extends AbstractController
             if ($changes) {
                 $this->em->persist($user);
                 $this->em->flush();
-
                 flash()
                     ->title('Exito!')
                     ->option('position', 'bottom-right')
@@ -157,6 +182,33 @@ class UserController extends AbstractController
             'form' => $form->createView(),
             'user' => $user
         ]);
+    }
+
+    private function resizeAndSaveImage(UploadedFile $imageFile, string $targetPath, int $size = 300): void
+    {
+        // Cargar la imagen original
+        $originalImage = imagecreatefromstring(file_get_contents($imageFile->getPathname()));
+        list($originalWidth, $originalHeight) = getimagesize($imageFile->getPathname());
+
+        // Calcular el tamaño del recorte
+        $cropSize = min($originalWidth, $originalHeight);
+
+        // Crear una nueva imagen cuadrada
+        $newImage = imagecreatetruecolor($size, $size);
+
+        // Calcular las coordenadas del recorte
+        $xOffset = ($originalWidth - $cropSize) / 2;
+        $yOffset = ($originalHeight - $cropSize) / 2;
+
+        // Redimensionar y recortar la imagen
+        imagecopyresampled($newImage, $originalImage, 0, 0, $xOffset, $yOffset, $size, $size, $cropSize, $cropSize);
+
+        // Guardar la imagen redimensionada en el disco
+        imagejpeg($newImage, $targetPath, 100); // Guardar como JPEG
+
+        // Liberar memoria
+        imagedestroy($originalImage);
+        imagedestroy($newImage);
     }
 
 }

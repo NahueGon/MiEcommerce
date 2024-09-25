@@ -68,7 +68,8 @@ class UserType extends AbstractType
         ])
         ->add('img_profile', FileType::class, [
             'label' => false,
-            'required' => $options['is_edit'] ? true : false,
+            'required' => false,
+            'data_class' => null,
             'constraints' => [
                 new File([
                     'maxSize' => '1024k',

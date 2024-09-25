@@ -67,12 +67,19 @@ class RegisterController extends AbstractController
             $safeFilename = $this->slugger->slug($originalFilename);
             $newFilename = $safeFilename.'-'.uniqid().'.'.$imageFile->guessExtension();
             try {
-                $imageFile->move($imagesDirectory, $newFilename);
+                $this->resizeAndSaveImage($imageFile, $imagesDirectory . '/' . $newFilename);
+                $user->setImgProfile($newFilename);
+                $changes = true;
             } catch (FileException $e) {
-                // ... handle exception if something happens during file upload
+               // Manejo de excepciones durante la carga del archivo
+                flash()
+                    ->option('position', 'bottom-right')
+                    ->option('timeout', 3000)
+                    ->error('Error al subir la imagen.');
+                return $this->redirect($this->generateUrl('user_edit', [
+                    'id' => $user->getId()
+                ]));
             }
-            $user->setImgProfile($newFilename);
-    
         }
         
         $data = $form->getData();
@@ -91,5 +98,32 @@ class RegisterController extends AbstractController
         
         $this->em->persist($user);
         $this->em->flush();
+    }
+
+    private function resizeAndSaveImage(UploadedFile $imageFile, string $targetPath, int $size = 300): void
+    {
+        // Cargar la imagen original
+        $originalImage = imagecreatefromstring(file_get_contents($imageFile->getPathname()));
+        list($originalWidth, $originalHeight) = getimagesize($imageFile->getPathname());
+
+        // Calcular el tamaño del recorte
+        $cropSize = min($originalWidth, $originalHeight);
+
+        // Crear una nueva imagen cuadrada
+        $newImage = imagecreatetruecolor($size, $size);
+
+        // Calcular las coordenadas del recorte
+        $xOffset = ($originalWidth - $cropSize) / 2;
+        $yOffset = ($originalHeight - $cropSize) / 2;
+
+        // Redimensionar y recortar la imagen
+        imagecopyresampled($newImage, $originalImage, 0, 0, $xOffset, $yOffset, $size, $size, $cropSize, $cropSize);
+
+        // Guardar la imagen redimensionada en el disco
+        imagejpeg($newImage, $targetPath, 100); // Guardar como JPEG
+
+        // Liberar memoria
+        imagedestroy($originalImage);
+        imagedestroy($newImage);
     }
 }
