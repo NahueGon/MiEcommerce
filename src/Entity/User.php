@@ -33,11 +33,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private array $roles = [];
 
     /**
-     * @var string The hashed password
+     * @var string|null The hashed password
      */
     #[ORM\Column]
+    #[Assert\NotBlank(groups: ['registration'])]
     private ?string $password = null;
-
+    
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
@@ -94,7 +95,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getRoles(): array
     {
         $roles = $this->roles;
-        $roles[] = 'ROLE_USER';
 
         return array_unique($roles);
     }
@@ -157,6 +157,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getFullName(): ?string
+    {
+        return $this->name . ' ' . $this->lastname;
+    }
+
     public function getGender(): ?string
     {
         return $this->gender;
@@ -181,6 +186,33 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getImgProfile(): ?string
+    {
+        return $this->img_profile;
+    }
+
+    public function setImgProfile(?string $img_profile): static
+    {
+        $this->img_profile = $img_profile;
+
+        return $this;
+    }
+
+    public function getAvatarUrl(): ?string
+    {
+        if (!$this->img_profile) {
+            if($this->gender = 'male'){
+                return '/uploads/images/profiles/defaultMaleImageProfile.jpg';
+            }else if($this->gender = 'female'){
+                return '/uploads/images/profiles/defaultFemaleImageProfile.jpg';
+            }else{
+                return '/uploads/images/profiles/defaultImageProfile.jpg';
+            }
+        }
+        
+        return '/uploads/images/profiles/' . $this->getId() . '/' . $this->img_profile;
+    }
+
     public static function loadValidatorMetadata(ClassMetadata $metadata): void
     {
         $metadata->addPropertyConstraint('name', new Assert\NotBlank([
@@ -195,9 +227,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             'message' => 'El nombre solo debe contener letras',
         ]));
 
-        $metadata->addPropertyConstraint('lastname', new Assert\NotBlank([
-            'message' => 'Este campo es obligatorio'
-        ]));
         $metadata->addPropertyConstraint('lastname', new Assert\Length([
             'min' => 3,
             'minMessage' => 'El nombre debe tener al menos 3 letras',
@@ -223,23 +252,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         ]));
         $metadata->addPropertyConstraint('password', new Assert\Length([
             'min' => 4,
-            'minMessage' => 'La contraseña debe tener al menos {{limit}} digitos',
-        ]));
-
-        $metadata->addPropertyConstraint('gender', new Assert\NotBlank([
-            'message' => 'Este campo es obligatorio'
+            'minMessage' => 'La contraseña debe tener al menos 4 digitos',
         ]));
     }
 
-    public function getImgProfile(): ?string
-    {
-        return $this->img_profile;
-    }
-
-    public function setImgProfile(?string $img_profile): static
-    {
-        $this->img_profile = $img_profile;
-
-        return $this;
-    }
 }

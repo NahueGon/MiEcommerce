@@ -5,7 +5,14 @@
 {% endblock %}
 
 {% block body %}
-    <img width="250" src="{{ app.user.imgProfile ? asset('uploads/images/' ~ app.user.imgProfile) : asset('uploads/images/defaultMaleImageProfile.jpg') }}" alt="">
+    <img src="  {{ user.imgProfile
+                ? asset('uploads/images/profiles/' ~ userImageDirectory)
+                : (user.gender == 'masculino')
+                    ? asset('uploads/images/profiles/defaultMaleImageProfile.jpg')
+                    : (user.gender == 'femenino')
+                        ? asset('uploads/images/profiles/defaultFemaleImageProfile.jpg')
+                        : asset('uploads/images/profiles/defaultImageProfile.jpg')
+                }}" width="250" alt="">
     <p>{{user.name}}</p>
     <p>{{user.lastname}}</p>
     <p>{{user.email}}</p>

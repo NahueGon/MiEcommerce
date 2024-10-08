@@ -1,7 +1,7 @@
 <header>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="{{ path('home') }}">MiEcommerce</a>
+        <div class="container-fluid">
+            <a class="navbar-brand fs-6 fw-semibold" href="{{ path('home') }}">MiEcommerce</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -17,25 +17,69 @@
                     <input type="search" class="form-control" placeholder="Search..." aria-label="Search">
                 </form> #}
             
-                <div class="dropdown text-end">
+                <div class="dropdown text-end"> 
                     {% if app.user %}
-                        <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-
+                        <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle align-middle" data-bs-toggle="dropdown" aria-expanded="false">
                             <img src="{{ app.user.imgProfile
-                            ? asset('uploads/images/' ~ app.user.imgProfile)
-                            : (app.user.gender == 'masculino')
-                                ? asset('uploads/images/defaultMaleImageProfile.svg') 
-                                : asset('uploads/images/defaultFemaleImageProfile.svg')
-                            }}" alt="Perfil Image" width="50" height="50" class="rounded-circle">
-
+                                    ? asset('uploads/images/profiles/' ~ app.user.id ~ '/' ~ app.user.imgProfile)
+                                    : (app.user.gender == 'male')
+                                        ? asset('uploads/images/profiles/defaultMaleImageProfile.jpg')
+                                        : (app.user.gender == 'female')
+                                            ? asset('uploads/images/profiles/defaultFemaleImageProfile.jpg')
+                                            : asset('uploads/images/profiles/defaultImageProfile.jpg')
+                                    }}" alt="Perfil Image" width="25" height="25" class="rounded border border-dark">
+                            
+                            <span class="text-white">
+                                <small>{{app.user.name}} {{app.user.lastname}}</small>
+                            </span>
                         </a>
-                        <ul class="dropdown-menu text-small">
-                            <li><a class="dropdown-item" href="{{ path('user_show', {'id':app.user.id}) }}">{{app.user.name}} {{app.user.lastname}}</a></li>
+                        <ul class="dropdown-menu dropdown-menu-lg-end p-2">
+                            <li class="d-flex p-1 pt-0 pb-0 gap-2 align-items-center">
+                                <div>
+                                    <img src="{{ app.user.imgProfile
+                                    ? asset('uploads/images/profiles/' ~ app.user.id ~ '/' ~ app.user.imgProfile)
+                                    : (app.user.gender == 'masculino')
+                                        ? asset('uploads/images/profiles/defaultMaleImageProfile.jpg')
+                                        : (app.user.gender == 'femenino')
+                                            ? asset('uploads/images/profiles/defaultFemaleImageProfile.jpg')
+                                            : asset('uploads/images/profiles/defaultImageProfile.jpg')
+                                    }}" alt="Perfil Image" width="40" height="40" class="rounded">
+                                </div>
+                                <div class="d-flex flex-column w-100">
+                                    <span class="text-muted">
+                                        <small>Conectado/a como</small>
+                                    </span>
+                                    <span class="user-name">
+                                        <small>{{app.user.name}} {{app.user.lastname}}</small>
+                                    </span>
+                                </div>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li class="d-flex">
+                                <a class="dropdown-item text-start p-0" href="{{ path('user_show', {'id':app.user.id}) }}">
+                                    <i class="fa fa-fw fas fa-user"></i>
+                                    <small>Mi Perfil</small>
+                                </a>
+                            </li>
                             {% if 'ROLE_ADMIN' in app.user.roles %}
-                                <li><a class="nav-link" href="{{ path('admin_dashboard') }}">Administrador</a></li>
+                                <li>
+                                    <a class="dropdown-item text-start p-0" href="{{ path('admin') }}">
+                                        <i class="fa fa fa-cogs"></i>
+                                        <small>Administrador</small>
+                                    </a>
+                                </li>
                             {% endif %}
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="nav-link" href="{{ path('user_logout') }}">Cerrar Sesion</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li class="d-flex">
+                                <a class="dropdown-item text-start p-0" href="{{ path('user_logout') }}">
+                                    <i class="fa fa-fw fa-sign-out"></i>
+                                    <small>Cerrar Sesion</small>
+                                </a>
+                            </li>
                         </ul>
                     {% else %}
                         <div class="text-end">

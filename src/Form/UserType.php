@@ -73,7 +73,7 @@ class UserType extends AbstractType
             'constraints' => [
                 new File([
                     'maxSize' => '1024k',
-                    'maxSizeMessage' => 'Es demaisado pesada la imagen',
+                    'maxSizeMessage' => 'Es demasiado pesada la imagen',
                     'mimeTypes' => [
                             'image/jpg',
                             'image/jpeg',

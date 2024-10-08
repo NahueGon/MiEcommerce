@@ -11,21 +11,26 @@
         <h1>{{title}} Usuario</h1>
     </div>
     <div class="row">
-    {{ form_start(form, {
-        'action': path('user_update', { 'id': user.id }),
-        'method': 'POST',
-        attr: { 'data-turbo': 'false' }
-    })}}
+        {{ form_start(form, {
+            'action': path('user_update', { 'id': user.id }),
+            'method': 'POST',
+            attr: { 'data-turbo': 'false' }
+        })}}
         <div class="mb-3">
-            <img width="250" src="{{ user.imgProfile
-                            ? asset('uploads/images/' ~ user.imgProfile)
-                            : (user.gender == 'masculino')
-                                ? asset('uploads/images/defaultMaleImageProfile.svg') 
-                                : asset('uploads/images/defaultFemaleImageProfile.svg')
-                            }}" alt="">
-            {{form_row(form.img_profile)}}
+            <img src="{{ user.imgProfile
+                    ? asset('uploads/images/profiles/' ~ userImageDirectory)
+                    : (user.gender == 'masculino')
+                        ? asset('uploads/images/profiles/defaultMaleImageProfile.jpg')
+                        : (user.gender == 'femenino')
+                            ? asset('uploads/images/profiles/defaultFemaleImageProfile.jpg')
+                            : asset('uploads/images/profiles/defaultImageProfile.jpg')
+                    }}" alt="" width="250" class="border border-secondary rounded" >
         </div>
-
+        <div class="mb-3">
+            <div class="form-group">
+                {{form_row(form.img_profile)}}
+            </div>
+        </div>
         <div class="mb-3">
             <div class="form-group">
                 {{form_row(form.name)}}

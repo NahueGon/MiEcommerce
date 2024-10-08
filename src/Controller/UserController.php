@@ -29,10 +29,12 @@ class UserController extends AbstractController
     #[Route('/user/show/{id}', name: 'user_show')]
     public function show(User $user): Response
     {
+        $userImageDirectory = $user->getId() . '/' . $user->getImgProfile();
 
         return $this->render('user/detail.html.twig', [
             'title' => 'Mi Perfil',
             'user' => $user,
+            'userImageDirectory' => $userImageDirectory,
         ]);
     }
 
@@ -42,16 +44,20 @@ class UserController extends AbstractController
         $form = $this->createForm(UserType::class, $user, [
             'is_edit' => true
         ]);
+
+        $userImageDirectory = $user->getId() . '/' . $user->getImgProfile();
+
         return $this->render('user/edit.html.twig',[
             'title' => 'Editar',
             'form' => $form->createView(),
             'user' => $user,
+            'userImageDirectory' => $userImageDirectory,
         ]);
 
     }
 
     #[Route('/user/update/{id}', name: 'user_update')]
-    public function update(User $user, Request $request, UserPasswordHasherInterface $passwordHasher,  #[Autowire('%kernel.project_dir%/public/uploads/images')] string $imagesDirectory)
+    public function update(User $user, Request $request, UserPasswordHasherInterface $passwordHasher,  #[Autowire('%kernel.project_dir%/public/uploads/images/profiles')] string $imagesDirectory)
     {
         $oldEmail = $user->getEmail();
         $oldName = $user->getName();
@@ -64,19 +70,21 @@ class UserController extends AbstractController
         $form->handleRequest($request);
         
         if($form->isSubmitted() && $form->isValid()){
-            $changes = false;
 
+            $changes = false;
+            $userDirectory = $this->editUserDirectory($user, $imagesDirectory);
             $imageFile = $form->get('img_profile')->getData();
+
             if ($imageFile) {
-                $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
-                $safeFilename = $this->slugger->slug($originalFilename);
-                $newFilename = $safeFilename.'-'.uniqid().'.'.$imageFile->guessExtension();
+                // $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+                // $safeFilename = $this->slugger->slug($originalFilename);
+                $newFilename = $user->getId() .'_'. $user->getName() .'_'. $user->getLastname() .'_'.uniqid().'.'.$imageFile->guessExtension();
                 try {
-                    $this->resizeAndSaveImage($imageFile, $imagesDirectory . '/' . $newFilename);
+                    $userImageDirectory = $imagesDirectory . '/' . $user->getId();
+                    $this->resizeAndSaveImage($imageFile, $userImageDirectory . '/' . $newFilename);
                     $user->setImgProfile($newFilename);
                     $changes = true;
                 } catch (FileException $e) {
-                   // Manejo de excepciones durante la carga del archivo
                     flash()
                         ->option('position', 'bottom-right')
                         ->option('timeout', 3000)
@@ -171,7 +179,6 @@ class UserController extends AbstractController
                     ->success('Usuario editado correctamente.');
             }
 
-			
 			return $this->redirect($this->generateUrl('user_show', [
 				'id' => $user->getId()
 			]));
@@ -180,33 +187,38 @@ class UserController extends AbstractController
         return $this->render('user/edit.html.twig',[
             'title' => 'Editar',
             'form' => $form->createView(),
-            'user' => $user
+            'user' => $user,
+            'userImageDirectory' => $userImageDirectory,
         ]);
+    }
+
+    private function editUserDirectory(User $user, string $baseDirectory): string
+    {
+        $userDirectory = $baseDirectory . '/' . $user->getId();
+        // dd($userDirectory );
+        if (!is_dir($userDirectory)) {
+            mkdir($userDirectory, 0777, true);
+        }
+
+        return $userDirectory;
     }
 
     private function resizeAndSaveImage(UploadedFile $imageFile, string $targetPath, int $size = 300): void
     {
-        // Cargar la imagen original
         $originalImage = imagecreatefromstring(file_get_contents($imageFile->getPathname()));
         list($originalWidth, $originalHeight) = getimagesize($imageFile->getPathname());
 
-        // Calcular el tamaño del recorte
         $cropSize = min($originalWidth, $originalHeight);
 
-        // Crear una nueva imagen cuadrada
         $newImage = imagecreatetruecolor($size, $size);
 
-        // Calcular las coordenadas del recorte
         $xOffset = ($originalWidth - $cropSize) / 2;
         $yOffset = ($originalHeight - $cropSize) / 2;
 
-        // Redimensionar y recortar la imagen
         imagecopyresampled($newImage, $originalImage, 0, 0, $xOffset, $yOffset, $size, $size, $cropSize, $cropSize);
 
-        // Guardar la imagen redimensionada en el disco
-        imagejpeg($newImage, $targetPath, 100); // Guardar como JPEG
+        imagejpeg($newImage, $targetPath, 100);
 
-        // Liberar memoria
         imagedestroy($originalImage);
         imagedestroy($newImage);
     }

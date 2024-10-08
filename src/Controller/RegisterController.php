@@ -42,7 +42,7 @@ class RegisterController extends AbstractController
                 $form,
                 $user,
                 $passwordHasher,
-                $this->getParameter('kernel.project_dir') . '/public/uploads/images',
+                $this->getParameter('kernel.project_dir') . '/public/uploads/images/profiles',
                 $this->slugger
             );
             flash()
@@ -59,21 +59,29 @@ class RegisterController extends AbstractController
         ]);
     }
 
-    public function saveUser($form, User $user, UserPasswordHasherInterface $passwordHasher, #[Autowire('%kernel.project_dir%/public/uploads/images')] string $imagesDirectory)
+    public function saveUser($form, User $user, UserPasswordHasherInterface $passwordHasher, #[Autowire('%kernel.project_dir%/public/uploads/images/profiles')] string $imagesDirectory)
     {
+        if (!$user->getId()) {
+            $this->em->persist($user);
+            $this->em->flush();
+        }
+
+        $userDirectory = $this->createUserDirectory($user, $imagesDirectory);
+
         $imageFile = $form->get('img_profile')->getData();
         if ($imageFile) {
-            $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
-            $safeFilename = $this->slugger->slug($originalFilename);
-            $newFilename = $safeFilename.'-'.uniqid().'.'.$imageFile->guessExtension();
+            // $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
+            // $safeFilename = $this->slugger->slug($originalFilename);
+            $newFilename = $user->getId() .'_'. $user->getName() .'_'. $user->getLastname() .'_'.uniqid().'.'.$imageFile->guessExtension();
+
             try {
-                $this->resizeAndSaveImage($imageFile, $imagesDirectory . '/' . $newFilename);
+                $userImageDirectory = $imagesDirectory . '/' . $user->getId();
+                $this->resizeAndSaveImage($imageFile, $userImageDirectory . '/' . $newFilename);
                 $user->setImgProfile($newFilename);
                 $changes = true;
             } catch (FileException $e) {
                // Manejo de excepciones durante la carga del archivo
                 flash()
-                    ->option('position', 'bottom-right')
                     ->option('timeout', 3000)
                     ->error('Error al subir la imagen.');
                 return $this->redirect($this->generateUrl('user_edit', [
@@ -98,6 +106,17 @@ class RegisterController extends AbstractController
         
         $this->em->persist($user);
         $this->em->flush();
+    }
+
+    private function createUserDirectory(User $user, string $baseDirectory): string
+    {
+        $userDirectory = $baseDirectory . '/' . $user->getId();
+
+        if (!is_dir($userDirectory)) {
+            mkdir($userDirectory, 0777, true);
+        }
+
+        return $userDirectory;
     }
 
     private function resizeAndSaveImage(UploadedFile $imageFile, string $targetPath, int $size = 300): void
