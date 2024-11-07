@@ -1,22 +1,64 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}
-    {{title}}
+	{{title}}
 {% endblock %}
 
 {% block body %}
-    <img src="  {{ user.imgProfile
-                ? asset('uploads/images/profiles/' ~ userImageDirectory)
-                : (user.gender == 'masculino')
-                    ? asset('uploads/images/profiles/defaultMaleImageProfile.jpg')
-                    : (user.gender == 'femenino')
-                        ? asset('uploads/images/profiles/defaultFemaleImageProfile.jpg')
-                        : asset('uploads/images/profiles/defaultImageProfile.jpg')
-                }}" width="250" alt="">
-    <p>{{user.name}}</p>
-    <p>{{user.lastname}}</p>
-    <p>{{user.email}}</p>
-    <p>{{user.gender}}</p>
-
-<a type="button" href="{{ path('user_edit', {'id':user.id}) }}" class="btn btn-warning">Editar</a>
+	<main>
+		<div class="container py-5 my-5">
+			<div class="row justify-content-center">
+				<div class="p-4 col-8">
+					<div class="rounded shadow p-3 pb-0 pb-lg-3">
+						<h1 class="d-none d-sm-block ms-1">{{title}}</h1>
+						<div class="d-flex flex-wrap align-items-center justify-content-center align-items-stretch">
+							<div class="image-container mb-1">
+								<img src="  {{ user.imgProfile
+									                                        ? asset('uploads/images/profiles/' ~ user.id ~ '/' ~ user.imgProfile)
+									                                        : (user.gender == 'male')
+									                                            ? asset('uploads/images/profiles/defaultMaleImageProfile.jpg')
+									                                            : (user.gender == 'female')
+									                                                ? asset('uploads/images/profiles/defaultFemaleImageProfile.jpg')
+									                                                : asset('uploads/images/profiles/defaultImageProfile.jpg')
+									                                        }}" width="250" alt="" class="rounded ">
+							</div>
+							<div class="col-6 d-flex flex-column flex-grow-1 px-3 pb-1">
+								<ul class="nav d-flex flex-column">
+									<li class="nav-item mb-2">
+										<p class="text-break">
+											<i class="fa fa-fw fas fa-user px-1"></i>
+											|
+											{{user.name}}
+											{{user.lastname}}
+										</p>
+									</li>
+									<li class="nav-item mb-2">
+										<p class="text-break">
+											<i class="fa fa-envelope px-1"></i>|
+											{{user.email}}
+										</p>
+									</li>
+									<li class="nav-item mb-2 px-1">
+										<p class="text-break">
+											<i class="fa fa-genderless"></i>  |
+											{{user.gender
+                                                ? (user.gender == 'male')
+                                                ? 'Masculino'
+                                                : (user.gender == 'female')
+                                                    ? 'Femenino'
+                                                    : 'Otro'
+                                            }}
+										</p>
+									</li>
+								</ul>
+								<div class="ms-auto mt-auto m-xs-auto">
+									<a type="button" href="{{ path('user_edit', {'slug': user.slug}) }}" class="btn btn-primary btn-sm">Editar Usuario</a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
 {% endblock %}

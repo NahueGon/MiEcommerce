@@ -8,9 +8,9 @@ framework:
                     base_path: 'uploads/images'
     # Note that the session will be started ONLY if you read or write from it.
     session: true
-
     #esi: true
     #fragments: true
+    error_controller: 'App\Controller\ErrorController::showAction'
 
 when@test:
     framework:

@@ -4,6 +4,7 @@ namespace App\Controller\Admin;
 
 use App\Entity\Product;
 use App\Entity\Category;
+use App\Repository\CategoryRepository;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AvatarField;
@@ -13,8 +14,11 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\MoneyField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\NumberField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\Field;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Doctrine\ORM\EntityManagerInterface;
@@ -57,24 +61,57 @@ class ProductCrudController extends AbstractCrudController
         
         $fields = [
             IdField::new('id')->onlyOnIndex(),
-            ImageField::new('ImageUrl','Imagen')->hideOnForm(),
+            ImageField::new('ImageUrl','Imagen')
+                ->onlyOnIndex(),
             TextField::new('name', 'Nombre')
                 ->setRequired(true)
+                ->setColumns(3)
                 ->setHelp('Este campo es Obligatorio.'),
-            NumberField::new('weight', 'Peso'),
-            IntegerField::new('stock', 'Cantidad'),
-            AssociationField::new('category', 'Categoria'),
+            AssociationField::new('category', 'Categoria')
+                ->setColumns(3),
+            IntegerField::new('stock', 'Cantidad')
+                ->setColumns(3),
+            FormField::addPanel(''),
+            AssociationField::new('brand', 'Marca')
+                ->setColumns(3),
+            ChoiceField::new('gender', 'Género')
+                ->setColumns(3)
+                ->setRequired(false)
+                ->setChoices(function() {
+                    $categoryRepository = $this->em->getRepository(Category::class);
+
+                    $categoriesWithoutParents = $categoryRepository->createQueryBuilder('c')
+                        ->leftJoin('c.parents', 'p')
+                        ->where('p.id IS NULL')
+                        ->orderBy('c.name', 'ASC')
+                        ->getQuery()
+                        ->getResult();
+                    
+                    $choices = [];
+                    foreach ($categoriesWithoutParents as $category) {
+                        $choices[$category->getName()] = $category->getId();
+                    }
+
+                    return $choices;
+                }),
+            AssociationField::new('sport', 'Deporte')
+                ->setColumns(3),
+            FormField::addPanel(''),
             MoneyField::new('price_list', 'Precio de Lista')
                 ->setCurrency('ARS')
                 ->setRequired(true)
+                ->setColumns(3)
                 ->setHelp('Este campo es Obligatorio.'),
-            MoneyField::new('price_sale', 'Precio Final')->setCurrency('ARS'),
-            TextField::new('brand', 'Marca'),
+            MoneyField::new('price_sale', 'Precio Final')
+                ->setCurrency('ARS')
+                ->setColumns(3),
         ];
 
         if (Crud::PAGE_NEW === $pageName) {
+            $fields[] = FormField::addPanel('');
             $fields[] =
             TextField::new('img_product', 'Imagen')
+                ->setColumns(3)
                 ->setFormType(FileType::class)
                 ->setFormTypeOptions([
                     'required' => true,
@@ -83,8 +120,10 @@ class ProductCrudController extends AbstractCrudController
                 ->setHelp('Sube una imagen para el Producto.');
         
         } elseif (Crud::PAGE_EDIT === $pageName){
+            $fields[] = FormField::addPanel('');
             $fields[] =
             TextField::new('img_product', 'Imagen')
+                ->setColumns(3)
                 ->setFormType(FileType::class)
                 ->setFormTypeOptions([
                     'required' => false,
@@ -94,7 +133,7 @@ class ProductCrudController extends AbstractCrudController
         }
 
         $fields[] = 
-            TextEditorField::new('description', 'Descripcion');
+            TextEditorField::new('description', 'Descripcion')->setColumns(6);
             IntegerField::new('views', 'Vistas')->onlyOnIndex();
             DateTimeField::new('created_at', 'Fecha de Creacion')->onlyOnIndex();
             DateTimeField::new('updated_at', 'Fecha de Actualizacion')->onlyOnIndex();
@@ -169,16 +208,14 @@ class ProductCrudController extends AbstractCrudController
     private function handleImageUpload(Product $product, $imgProductFile): void
     {
         $categoryId = $product->getCategory()->getId();
-        $newFilename = sprintf('%d_%s_%d_%s.%s',
+        $newFilename = sprintf('%d_%s.%s',
             $product->getId(),
             $product->getName(),
-            $categoryId,
-            uniqid(),
             $imgProductFile->guessExtension()
         );
 
         $productImageDirectory = $this->categoriesDirectory . '/' . $categoryId . '/' . $newFilename;
-        
+
         try {
             $this->resizeAndSaveImage($imgProductFile, $productImageDirectory);
             $product->setImgProduct($newFilename);
@@ -249,16 +286,12 @@ class ProductCrudController extends AbstractCrudController
                 $em->flush();
 
                 if ($imgProductFile instanceof UploadedFile) {
-                    // Si hay una nueva imagen, elimina la anterior y sube la nueva
                     $this->handleImageDelete($product, $oldFilename, $oldCategoryId);
                     $this->handleImageUpload($product, $imgProductFile);
                 } else {
-                    // Si no hay una nueva imagen
                     if ($newName != $oldName || $newCategoryId != $oldCategoryId) {
-                        // Renombrar si el nombre o la categoría cambian
                         $this->handleImageRename($product, $oldFilename, $oldCategoryId);
                     } else {
-                        // Si no hay cambios en el nombre o la categoría, mantener el nombre de la imagen anterior
                         $product->setImgProduct($oldFilename);
                     }
                 }
@@ -283,14 +316,11 @@ class ProductCrudController extends AbstractCrudController
             $categoryId = $product->getCategory()->getId();
         }
 
-        $uniqueId = uniqid();
         $extension = pathinfo($filename, PATHINFO_EXTENSION);
 
-        $newFilename = sprintf('%d_%s_%d_%s.%s',
+        $newFilename = sprintf('%d_%s.%s',
             $product->getId(),
             $product->getName(),
-            $product->getCategory()->getId(),
-            $uniqueId,
             $extension
         );  
 
@@ -314,14 +344,17 @@ class ProductCrudController extends AbstractCrudController
         }
     }
     
-    public function handleImageDelete($product, $filename, $categoryId): void
+    public function handleImageDelete($product, $filename, $categoryId)
     {
         $productImageDirectory = $this->categoriesDirectory . '/' . $categoryId . '/' . $filename;
+        
         if (!file_exists($productImageDirectory)) {
             flash()
                 ->title('Información')
                 ->option('timeout', 3000)
                 ->info('El archivo no existe en el sistema.');
+
+                return $this->redirect($this->generateUrl('admin'));
         }
 
         unlink($productImageDirectory);
@@ -346,7 +379,5 @@ class ProductCrudController extends AbstractCrudController
                 ->option('timeout', 3000)
                 ->success('Error al eliminar el archivo.');
         }
-
     }
-
 }

@@ -5,6 +5,8 @@ namespace App\Controller\Admin;
 use App\Entity\User;
 use App\Entity\Product;
 use App\Entity\Category;
+use App\Entity\Sport;
+use App\Entity\Brand;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
@@ -24,11 +26,11 @@ class DashboardController extends AbstractDashboardController
     {
         $adminUrlGenerator = $this->container->get(AdminUrlGenerator::class);
 
-        return $this->redirect($adminUrlGenerator->setController(UserCrudController::class)->generateUrl());
+        // return $this->redirect($adminUrlGenerator->setController(UserCrudController::class)->generateUrl());
 
-        // return $this->render('admin/dashboard.html.twig', [
-        //     'some_variable' => 'value',
-        // ]);
+        return $this->render('admin/dashboard.html.twig', [
+            'some_variable' => 'value',
+        ]);
     }
 
     public function configureUserMenu(UserInterface $user): UserMenu
@@ -42,7 +44,7 @@ class DashboardController extends AbstractDashboardController
             ->setName($user->getName() . ' ' . $user->getLastname())
             ->addMenuItems([
                 MenuItem::linkToUrl('Mi Perfil', 'fas fa-user', $this->generateUrl('user_show', [
-                    'id' => $user->getId()
+                    'slug' => $user->getSlug()
                 ])),
                 MenuItem::linkToUrl('Sitio Web', 'fas fa-home', $this->generateUrl('home'))
             ]);
@@ -62,6 +64,8 @@ class DashboardController extends AbstractDashboardController
             MenuItem::section('Productos'),
             MenuItem::linkToCrud('Productos', 'fa fa-shopping-cart', Product::class),
             MenuItem::linkToCrud('Categorias', 'fa fa-th-list', Category::class),
+            MenuItem::linkToCrud('Deportes', 'fa fa-th-list', Sport::class),
+            MenuItem::linkToCrud('Marcas', 'fa fa-th-list', Brand::class),
         ];
     }
 

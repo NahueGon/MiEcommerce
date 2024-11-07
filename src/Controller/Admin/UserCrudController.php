@@ -3,6 +3,7 @@
 namespace App\Controller\Admin;
 
 use App\Entity\User;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
@@ -19,23 +20,27 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Cocur\Slugify\Slugify;
 
 class UserCrudController extends AbstractCrudController
 {
     private UserPasswordHasherInterface $passwordHasher;
     private EntityManagerInterface $em;
-    private $slugger;
+    private SluggerInterface $slugger;
+    private UserRepository $userRepository;
 
     public function __construct(
         UserPasswordHasherInterface $passwordHasher,
         #[Autowire('%kernel.project_dir%/public/uploads/images/profiles')] string $imagesDirectory,
         EntityManagerInterface $em,
-        SluggerInterface $slugger
+        SluggerInterface $slugger,
+        UserRepository $userRepository
     ) {
         $this->passwordHasher = $passwordHasher;
         $this->imagesDirectory = $imagesDirectory;
         $this->em = $em;
         $this->slugger = $slugger;
+        $this->userRepository = $userRepository;
     }
 
     public static function getEntityFqcn(): string
@@ -64,6 +69,7 @@ class UserCrudController extends AbstractCrudController
             TextField::new('lastname', 'Apellido')
                 ->onlyOnForms(),
             EmailField::new('email', 'Email')->setRequired(true),
+            TextField::new('slug', 'Slug')->onlyOnIndex(),
         ];
 
         if (Crud::PAGE_NEW === $pageName) {
@@ -97,7 +103,7 @@ class UserCrudController extends AbstractCrudController
                     'Moderador' => 'ROLE_MODERATOR',
                 ])->allowMultipleChoices()
                 ->setHelp('Roles Disponibles: ROLE_ADMIN, ROLE_MODERATOR, ROLE_USER')
-                ->setRequired(false);;
+                ->setRequired(false);
 
         return $fields;
     }
@@ -107,6 +113,7 @@ class UserCrudController extends AbstractCrudController
         $user = new User();
         $user->setRoles(['ROLE_USER']);
         $user->setCreatedAt(new \DateTime('now', new \DateTimeZone('America/Argentina/Buenos_Aires')));
+        $user->setSlug('');
 
         return $user;
     }
@@ -115,14 +122,15 @@ class UserCrudController extends AbstractCrudController
     {
         if ($user instanceof User) {
             $this->sanitizeUser($user);
-            
+            $this->generateUniqueSlug($user);
+
             $hashedPassword = $this->passwordHasher->hashPassword(
                 $user,
                 $user->getPassword()
             );
             $user->setPassword($hashedPassword);
 
-
+            
             if (empty($user->getRoles())) {
                 $user->setRoles(['ROLE_USER']);
             }
@@ -148,10 +156,7 @@ class UserCrudController extends AbstractCrudController
             } catch(\Exception $e){
                 flash()
                     ->option('timeout', 3000)
-                    ->error('Error al guardar el usuario' );
-
-                $em->remove($user);
-                $em->flush();
+                    ->error('Error al guardar el usuario');
             }
         }
     }
@@ -160,11 +165,13 @@ class UserCrudController extends AbstractCrudController
     {
         if ($user instanceof User) {
             $this->sanitizeUser($user);
-
+            $this->generateUniqueSlug($user);
+            
             $originalData = $em->getUnitOfWork()->getOriginalEntityData($user);
-
+            
             $oldName = $originalData['name'];
             $oldLastname = $originalData['lastname'];
+            
             $newName = $user->getName();
             $newLastname = $user->getLastname();
             $filename = $user->getImgProfile();
@@ -172,7 +179,8 @@ class UserCrudController extends AbstractCrudController
             try {
                 $em->persist($user);
                 $em->flush();
-
+                
+                
                 if ($newName != $oldName || $newLastname != $oldLastname) {
                     if ($filename) {
                         $this->handleImageRename($user);
@@ -196,14 +204,12 @@ class UserCrudController extends AbstractCrudController
     public function handleImageRename($user): void
     {
         $filename = $user->getImgProfile();
-        $uniqueId = uniqid();
         $extension = pathinfo($filename, PATHINFO_EXTENSION);
 
-        $newFilename = sprintf('%d_%s_%s_%s.%s',
+        $newFilename = sprintf('%d_%s_%s.%s',
             $user->getId(),
             $user->getName(),
             $user->getLastname(),
-            $uniqueId,
             $extension
         );  
 
@@ -223,7 +229,7 @@ class UserCrudController extends AbstractCrudController
         } catch (\Exception $e) {
             flash()
                 ->option('timeout', 3000)
-                ->error('Error al renombrar el archivo: ' . $e->getMessage());
+                ->error('Error al renombrar el archivo');
         }
     }
     
@@ -232,7 +238,7 @@ class UserCrudController extends AbstractCrudController
     {
         $name = strip_tags($user->getName());
         $user->setName($name);
-    
+        
         if ($lastname = $user->getLastname()) {
             $user->setLastname(strip_tags($lastname));
         }
@@ -242,13 +248,34 @@ class UserCrudController extends AbstractCrudController
         }
     }
 
+    public function generateUniqueSlug(User $user): void
+    {
+        $slugify = new Slugify();
+        $fullName = $user->getFullName();
+
+        $slug = $slugify->slugify($fullName);
+        $originalSlug = $slug;
+
+        $counter = 1;
+        while ($this->slugExists($slug)) {
+            $slug = $originalSlug . '-' . $counter;
+            $counter++;
+        }
+
+        $user->setSlug($slug);
+    }
+
+    private function slugExists(string $slug): bool
+    {
+        return $this->userRepository->findOneBy(['slug' => $slug]) !== null;
+    }
+
     private function handleImageUpload(User $user, $imgProfileFile): void
     {
-        $newFilename = sprintf('%d_%s_%s_%s.%s',
+        $newFilename = sprintf('%d_%s_%s.%s',
             $user->getId(),
             $user->getName(),
             $user->getLastname(),
-            uniqid(),
             $imgProfileFile->guessExtension()
         );
 
@@ -259,7 +286,7 @@ class UserCrudController extends AbstractCrudController
             $user->setImgProfile($newFilename);
 
         } catch (\Exception $e) {
-            throw new \RuntimeException('Error al subir la imagen: ' . $e->getMessage());
+            throw new \RuntimeException('Error al subir la imagen');
         }
     }
 

@@ -1,94 +1,248 @@
-<header>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand fs-6 fw-semibold" href="{{ path('home') }}">MiEcommerce</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ path('home') }}"></a>
-                    </li>
-                </ul>
-
-                {# <form class="col-12 col-lg-auto mb-3 mb-lg-0 me-lg-3" role="search">
-                    <input type="search" class="form-control" placeholder="Search..." aria-label="Search">
-                </form> #}
-            
-                <div class="dropdown text-end"> 
-                    {% if app.user %}
-                        <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle align-middle" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src="{{ app.user.imgProfile
-                                    ? asset('uploads/images/profiles/' ~ app.user.id ~ '/' ~ app.user.imgProfile)
-                                    : (app.user.gender == 'male')
-                                        ? asset('uploads/images/profiles/defaultMaleImageProfile.jpg')
-                                        : (app.user.gender == 'female')
-                                            ? asset('uploads/images/profiles/defaultFemaleImageProfile.jpg')
-                                            : asset('uploads/images/profiles/defaultImageProfile.jpg')
-                                    }}" alt="Perfil Image" width="25" height="25" class="rounded border border-dark">
-                            
-                            <span class="text-white">
-                                <small>{{app.user.name}} {{app.user.lastname}}</small>
-                            </span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-lg-end p-2">
-                            <li class="d-flex p-1 pt-0 pb-0 gap-2 align-items-center">
-                                <div>
-                                    <img src="{{ app.user.imgProfile
-                                    ? asset('uploads/images/profiles/' ~ app.user.id ~ '/' ~ app.user.imgProfile)
-                                    : (app.user.gender == 'masculino')
-                                        ? asset('uploads/images/profiles/defaultMaleImageProfile.jpg')
-                                        : (app.user.gender == 'femenino')
-                                            ? asset('uploads/images/profiles/defaultFemaleImageProfile.jpg')
-                                            : asset('uploads/images/profiles/defaultImageProfile.jpg')
-                                    }}" alt="Perfil Image" width="40" height="40" class="rounded">
-                                </div>
-                                <div class="d-flex flex-column w-100">
-                                    <span class="text-muted">
-                                        <small>Conectado/a como</small>
-                                    </span>
-                                    <span class="user-name">
-                                        <small>{{app.user.name}} {{app.user.lastname}}</small>
-                                    </span>
-                                </div>
-                            </li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li class="d-flex">
-                                <a class="dropdown-item text-start p-0" href="{{ path('user_show', {'id':app.user.id}) }}">
-                                    <i class="fa fa-fw fas fa-user"></i>
-                                    <small>Mi Perfil</small>
-                                </a>
-                            </li>
-                            {% if 'ROLE_ADMIN' in app.user.roles %}
-                                <li>
-                                    <a class="dropdown-item text-start p-0" href="{{ path('admin') }}">
-                                        <i class="fa fa fa-cogs"></i>
-                                        <small>Administrador</small>
-                                    </a>
-                                </li>
-                            {% endif %}
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li class="d-flex">
-                                <a class="dropdown-item text-start p-0" href="{{ path('user_logout') }}">
-                                    <i class="fa fa-fw fa-sign-out"></i>
-                                    <small>Cerrar Sesion</small>
-                                </a>
-                            </li>
-                        </ul>
-                    {% else %}
-                        <div class="text-end">
-                            <a type="button" href="{{ path('user_login') }}" class="btn btn-outline-light me-2">Iniciar Sesion</a>
-                            <a type="button" href="{{ path('user_register') }}" class="btn btn-warning">Registrarme</a>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </nav>
-</header>
+{% if app.request.attributes.get('_route') not in ['user_login', 'user_register'] %}
+	<header>
+		<div class="container-fluid shadow rounded-5 rounded-top-0 bg-dark">
+			<div class="row justify-content-center bg-dark">
+				<div class="col-9">
+					<nav class="navbar navbar-dark navbar-expand-lg bg-dark p-3">
+						<a class="navbar-brand fs-6 fw-semibold order-2 order-lg-0 p-2 m-0" href="{{ path('home') }}">MiEcommerce</a>
+						<button class="navigation-toggler d-block d-lg-none m-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar" aria-controls="offcanvasDarkNavbar">
+							<i class="fa fa-fw fa-bars"></i>
+						</button>
+						{% set categories = getCategories() %}
+						{% if categories is not empty %}
+							<div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="offcanvasDarkNavbar" aria-labelledby="offcanvasDarkNavbarLabel">
+								<div class="d-block d-lg-none d-flex justify-content-between p-3 align-items-center">
+									<h5 class="offcanvas-title" id="offcanvasNavbarLabel">Categorias</h5>
+									<button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+								</div>
+								<hr class="d-block d-lg-none mt-0">
+								<div class="offcanvas-body d-flex align-items-start align-items-lg-center flex-column pt-0">
+									<ul class="navbar-nav">
+										{% for category in categories %}
+											{% set subCategories = category.getSubCategories() %}
+											{% if category.getParents() is empty and category.name != "Sin Especificar" and category.getSubCategories() is not empty %}
+												<li class="nav-item item mx-1 fw-medium">
+													<a class="nav-link dropdown-toggle d-none d-lg-block text-white" id="navbarDropdown{{ category.id }}" role="button" aria-expanded="false" aria-controls="dropdownMenu{{ category.id }}" href="{{ path('show_category_slug', { 'slug': category.slug }) }}">
+														{{ category.name }}
+													</a>
+													<div class="position-fixed w-100 d-none d-lg-block rounded-4 bg-dark half-overlay-dropdownMenu p-3" id="dropdownMenu{{ category.id }}">
+														<ul class="navbar-nav d-flex justify-content-evenly">
+															{% set subCategories = category.getSubCategories() %}
+															{% if subCategories is not empty %}
+																{% for subCategory in subCategories %}
+																	{% if subCategory.getParents() is not empty and subCategory.getSubCategories() is not empty %}
+																		{% if subCategory.parents is not null %}
+																			{% for subCategoryParent in subCategory.parents %}
+																				{% if subCategoryParent == category.name %}
+																					<li class="nav-item subitem fw-medium">
+																						<a class="nav-link text-white" href="{{ path('show_category_parent', { 'parentSlug': subCategoryParent.slug, 'slug': subCategory.slug }) }}">
+																							{{ subCategory.name }}
+																						</a>
+																						<ul class="navbar-nav ">
+																							{% set subSubCategories = subCategory.getSubCategories() %}
+																							{% if subSubCategories is not empty %}
+																								<div class="d-flex flex-column">
+																									{% for subSubCategory in subSubCategories %}
+																										{% if subSubCategory.parents is not null %}
+																											{% if subSubCategory.getParents() is not empty and subSubCategory.getSubCategories() is empty %}
+																												{% for subSubCategoryParent in subSubCategory.parents %}
+																													{% if subSubCategoryParent.name == category.name %}
+																														<li class="nav-item subsubitem fw-medium">
+																															<a class="nav-link" href="{{ path('show_category', { 'grandparentSlug': category.slug, 'parentSlug': subCategory.slug, 'slug': subSubCategory.slug }) }}">
+																																<small>{{ subSubCategory.name }}</small>
+																															</a>
+																														</li>
+																													{% endif %}
+																												{% endfor %}
+																											{% endif %}
+																										{% endif %}
+																									{% endfor %}
+																								</div>
+																							{% else %}
+																								<li>
+																									<span class="nav-link text-center">No hay subcategorías</span>
+																								</li>
+																							{% endif %}
+																						</ul>
+																					</li>
+																				{% endif %}
+																			{% endfor %}
+																		{% endif %}
+																	{% endif %}
+																{% endfor %}
+															{% endif %}
+														</ul>
+													</div>
+													<a class="nav-link d-block d-lg-none text-white" role="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvas{{ category.name }}" aria-controls="offcanvas{{ category.name }}">
+														{{ category.name }}
+													</a>
+												</li>
+											{% endif %}
+										{% endfor %}
+									</ul>
+									{% if not app.user %}
+										<div class="mt-auto w-100 d-block d-lg-none text-end">
+											<a type="button" href="{{ path('user_login') }}" class="btn btn-outline-light btn-sm me-2">Iniciar Sesion</a>
+											<a type="button" href="{{ path('user_register') }}" class="btn btn-primary btn-sm">Registrarme</a>
+										</div>
+									{% endif %}
+								</div>
+							</div>
+							{% for category in categories %}
+								{% set subCategories = category.getSubCategories() %}
+								{% if category.getParents() is empty and category.name != "Sin Especificar" and subCategories is not empty %}
+									<!-- Offcanvas para categorías principales -->
+									<div class="offcanvas offcanvas-start text-bg-dark d-block d-lg-none" tabindex="-1" id="offcanvas{{ category.name }}" aria-labelledby="offcanvas{{ category.name }}">
+										<div class="d-flex justify-content-between p-3 pb-0 align-items-center">
+											<a class="btn-prev fs-4 text-secondary" data-bs-toggle="offcanvas" role="button" data-bs-target="#offcanvasDarkNavbar" aria-controls="offcanvasDarkNavbar">
+												<i class="fa fa-chevron-left" aria-hidden="true"></i>
+											</a>
+											<a class="text-decoration-none text-white" href="{{ path('show_category_slug', { 'slug': category.slug }) }}">
+												<h5 class="offcanvas-title" id="offcanvas{{ category.name }}">{{ category.name }}</h5>
+											</a>
+											<button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+										</div>
+										<hr>
+										<div class="offcanvas-body pt-0">
+											<ul class="navbar-nav w-25">
+												{% for subCategory in subCategories %}
+													{% if subCategory.getParents() is not empty and subCategory.getSubCategories() is not empty %}
+														<!-- Subcategorías del primer nivel -->
+														<li class="nav-item subsubitem mx-1 fw-medium">
+															<a class="nav-link d-block d-lg-none" role="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvas{{ category.name }}{{ subCategory.name }}" aria-controls="offcanvas{{ category.name }}{{ subCategory.name }}">
+																{{ subCategory.name }}
+															</a>
+														</li>
+													{% endif %}
+												{% endfor %}
+											</ul>
+										</div>
+									</div>
+									<!-- Offcanvas para subcategorías del primer nivel -->
+									{% for subCategory in subCategories %}
+										{% if subCategory.getParents() is not empty and subCategory.getSubCategories() is not empty %}
+											<div class="offcanvas offcanvas-start text-bg-dark d-block d-lg-none" tabindex="-1" id="offcanvas{{ category.name }}{{ subCategory.name }}" aria-labelledby="offcanvas{{ category.name }}{{ subCategory.name }}">
+												<div class="d-flex justify-content-between p-3 pb-0 align-items-center">
+													<a class="btn-prev fs-4 text-secondary" data-bs-toggle="offcanvas" role="button" data-bs-target="#offcanvas{{ category.name }}" aria-controls="offcanvas{{ category.name }}">
+														<i class="fa fa-chevron-left" aria-hidden="true"></i>
+													</a>
+													<a class="text-decoration-none text-white" href="{{ path('show_category_parent', { 'parentSlug': category.slug, 'slug': subCategory.slug }) }}">
+														<h5 class="offcanvas-title" id="offcanvas{{ subCategory.name }}">{{ subCategory.name }}</h5>
+													</a>
+													<button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+												</div>
+												<hr>
+												<div class="offcanvas-body pt-0">
+													<ul class="navbar-nav w-25">
+														{% set subSubCategories = subCategory.getSubCategories() %}
+														{% for subSubCategory in subSubCategories %}
+															{% if subSubCategory.parents is not null and subSubCategory.getSubCategories() is empty %}
+																<!-- Subcategorías del segundo nivel -->
+																<li class="nav-item subsubitem mx-1 fw-medium">
+																	<a class="nav-link d-block d-lg-none" href="{{ path('show_category', { 'grandparentSlug': category.slug, 'parentSlug': subCategory.slug, 'slug': subSubCategory.slug }) }}">
+																		{{ subSubCategory.name }}
+																	</a>
+																</li>
+															{% endif %}
+														{% endfor %}
+													</ul>
+												</div>
+											</div>
+										{% endif %}
+									{% endfor %}
+								{% endif %}
+							{% endfor %}
+						{% endif %}
+						<div class="menu order-2 d-flex align-items-center">
+							<div class="shop-cart pe-lg-3">
+								<button class="btn btn-transparent" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDark" aria-controls="offcanvasDark">
+									<i class="fa fa-shopping-cart text-white" aria-hidden="true"></i>
+								</button>
+							</div>
+							<div class="dropdown d-flex align-items-center jusitfy-content-between">
+								{% if app.user %}
+									<a type="button" class="d-block link-dark text-decoration-none dropdown-toggle align-middle d-flex align-items-center" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+										<div class="d-flex align-items-center">
+											<img src="{{
+											app.user.imgProfile
+												? asset('uploads/images/profiles/' ~ app.user.id ~ '/' ~ app.user.imgProfile)
+												: (app.user.gender == 'male'
+													? asset('uploads/images/profiles/defaultMaleImageProfile.jpg')
+													: (app.user.gender == 'female'
+														? asset('uploads/images/profiles/defaultFemaleImageProfile.jpg')
+														: asset('uploads/images/profiles/defaultImageProfile.jpg')
+													)
+												)
+											}}" alt="Perfil Image" width="25" height="25" class="rounded border border-dark m-1">
+											<span class="text-white d-none d-lg-block align-middle">
+												<small>{{app.user.name}}
+													{{app.user.lastname}}</small>
+											</span>
+										</div>
+									</a>
+									<ul class="dropdown-menu dropdown-menu-end dropdown-menu-lg-end p-1">
+										<li class="d-flex p-1 pt-0 pb-0 gap-2 align-items-center">
+											<div>
+												<img src="{{ app.user.imgProfile ? asset('uploads/images/profiles/' ~ app.user.id ~ '/' ~ app.user.imgProfile) : (app.user.gender == 'masculino') ? asset('uploads/images/profiles/defaultMaleImageProfile.jpg') : (app.user.gender == 'femenino') ? asset('uploads/images/profiles/defaultFemaleImageProfile.jpg') : asset('uploads/images/profiles/defaultImageProfile.jpg') }}" alt="Perfil Image" width="40" height="40" class="rounded">
+											</div>
+											<div class="d-flex flex-column w-100">
+												<span class="text-muted">
+													<small>Conectado/a como</small>
+												</span>
+												<span class="user-name">
+													<small>{{app.user.name}}
+														{{app.user.lastname}}</small>
+												</span>
+											</div>
+										</li>
+										<li>
+											<hr class="dropdown-divider">
+										</li>
+										<li class="d-flex">
+											<a class="dropdown-item text-start p-0" href="{{ path('user_show', {'slug':app.user.slug}) }}">
+												<i class="fa fa-fw fas fa-user ms-2 fs-6"></i>
+												<small>Mi Perfil</small>
+											</a>
+										</li>
+										{% if 'ROLE_ADMIN' in app.user.roles %}
+											<li>
+												<a class="dropdown-item text-start p-0" href="{{ path('admin') }}">
+													<i class="fa fa fa-cogs ms-2 fs-6"></i>
+													<small>Administrador</small>
+												</a>
+											</li>
+										{% endif %}
+										<li>
+											<hr class="dropdown-divider">
+										</li>
+										<li class="d-flex">
+											<a class="dropdown-item text-start p-0" href="{{ path('user_logout') }}">
+												<i class="fa fa-fw fa-sign-out ms-2 fs-6"></i>
+												<small>Cerrar Sesion</small>
+											</a>
+										</li>
+									</ul>
+								{% else %}
+									<div class="text-end d-none d-lg-block">
+										<a type="button" href="{{ path('user_login') }}" class="btn btn-outline-light btn-sm me-2">Iniciar Sesion</a>
+										<a type="button" href="{{ path('user_register') }}" class="btn btn-primary btn-sm">Registrarme</a>
+									</div>
+								{% endif %}
+							</div>
+						</div>
+					</nav>
+					<div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="offcanvasDark" aria-labelledby="offcanvasDarkLabel">
+						<div class="d-flex justify-content-between p-3 align-items-center">
+							<h5 class="offcanvas-title" id="offcanvasDarkLabel">Carrito de Compras</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+						</div>
+						<hr class="m-0">
+						<div class="offcanvas-body">
+							...
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</header>
+{% endif %}

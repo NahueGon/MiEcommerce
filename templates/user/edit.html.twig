@@ -5,63 +5,112 @@
 {% endblock %}
 
 {% block body %}
-
-<div class="border border-light p-3">
-    <div class="border-bottom mb-2">
-        <h1>{{title}} Usuario</h1>
+    <div class="container py-5 my-5">
+        <div class="row justify-content-center">
+            <div class="p-4 col-8">
+                {{ form_start(form, {
+                    'action': path('user_update', { 'slug': user.slug }),
+                    'method': 'POST',
+                    attr: { 'class': 'form-signin-edit shadow rounded px-3 pt-3 pb-md-3 pb-xs-0', 'data-turbo': 'false' }
+                })}}
+                <h1 class="d-none d-sm-block ms-1">{{title}} Usuario</h1>
+                <div class="d-flex flex-wrap align-items-center justify-content-center align-items-stretch">
+                    <div class="image-container mx-2 mb-2">
+                        <img src="  {{ user.imgProfile
+                                ? asset('uploads/images/profiles/' ~ user.id ~ '/' ~ user.imgProfile)
+                                : (user.gender == 'male')
+                                    ? asset('uploads/images/profiles/defaultMaleImageProfile.jpg')
+                                    : (user.gender == 'female')
+                                        ? asset('uploads/images/profiles/defaultFemaleImageProfile.jpg')
+                                        : asset('uploads/images/profiles/defaultImageProfile.jpg')
+                                }}" width="250" alt="" class="rounded-0 rounded-top">
+                        <div class="form-floating">
+                            {{ form_widget(form.img_profile, {
+                                    'attr': {
+                                        'class': 'rounded-0 rounded-bottom',
+                                        'placeholder': 'Imagen de perfil'
+                                    } 
+                                })
+                            }}
+                            <label for="{{ form.img_profile.vars.id }}">Imagen de Perfil</label>
+                        </div>
+                    </div>
+                    <div class="col-6 d-flex flex-column flex-grow-1 px-3 pb-3 pb-lg-2 pb-md-0 pb-sm-0">
+                        <div class="row mb-2 flex-wrap">
+                            <div class="col-md-4 col-sm-12 form-floating p-0 flex-grow-1">
+                                {{ form_widget(form.name, {
+                                        'attr': {
+                                            'class': 'name',
+                                            'placeholder': 'Nombre'
+                                        }
+                                    })
+                                }}
+                                <label for="{{ form.name.vars.id }}">Nombre</label>
+                            </div>
+                            <div class="col-md-4 col-sm-6 form-floating p-0 flex-grow-1">
+                                {{ form_widget(form.lastname, { 
+                                    'attr': {
+                                        'class': 'lastname',
+                                        'placeholder': 'Apellido'
+                                        }
+                                    })
+                                }}
+                                <label for="{{ form.lastname.vars.id }}">Apellido</label>
+                            </div>
+                            <div class="col-md-4 col-sm-6 form-floating p-0">
+                                {{ form_widget(form.gender, {
+                                    'attr': {
+                                        'class': 'gender',
+                                        'placeholder': 'Genero'
+                                        } 
+                                    }) 
+                                }}
+                                <label for="{{ form.gender.vars.id }}">Genero</label>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-floating p-0">
+                                {{ form_widget(form.email, {
+                                    'attr': {
+                                        'class': 'email rounded-0 rounded-top',
+                                        'placeholder': 'Email'
+                                        }
+                                    })
+                                }}
+                                <label for="{{ form.email.vars.id }}">Email</label>
+                            </div>
+                        </div>
+                        <div class="row mb-2">   
+                            <div class="d-flex flex-wrap p-0">
+                                <div class="form-floating flex-grow-1">
+                                    {{ form_widget(form.old_password, {
+                                            'attr': {
+                                                'class': 'old-password mb-0',
+                                                'placeholder': 'Contraseña Actual'
+                                            }
+                                        }) 
+                                    }}
+                                    <label for="{{ form.old_password.vars.id }}">Contraseña Actual</label>
+                                </div>
+                                <div class="form-floating flex-grow-1">
+                                    {{ form_widget(form.new_password, {
+                                        'attr': {
+                                            'class': 'new-password mb-0',
+                                            'placeholder': 'Contraseña Nueva'
+                                            } 
+                                        })
+                                    }}
+                                    <label for="{{ form.new_password.vars.id }}">Contraseña Nueva</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ms-auto mt-auto m-xs-auto">
+                            {{ form_widget(form.submit, { 'attr': {'class': 'btn btn-primary btn-sm'} }) }}
+                        </div>
+                    </div>
+                </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
     </div>
-    <div class="row">
-        {{ form_start(form, {
-            'action': path('user_update', { 'id': user.id }),
-            'method': 'POST',
-            attr: { 'data-turbo': 'false' }
-        })}}
-        <div class="mb-3">
-            <img src="{{ user.imgProfile
-                    ? asset('uploads/images/profiles/' ~ userImageDirectory)
-                    : (user.gender == 'masculino')
-                        ? asset('uploads/images/profiles/defaultMaleImageProfile.jpg')
-                        : (user.gender == 'femenino')
-                            ? asset('uploads/images/profiles/defaultFemaleImageProfile.jpg')
-                            : asset('uploads/images/profiles/defaultImageProfile.jpg')
-                    }}" alt="" width="250" class="border border-secondary rounded" >
-        </div>
-        <div class="mb-3">
-            <div class="form-group">
-                {{form_row(form.img_profile)}}
-            </div>
-        </div>
-        <div class="mb-3">
-            <div class="form-group">
-                {{form_row(form.name)}}
-            </div>
-        </div>
-        <div class="mb-3">
-            <div class="form-group">
-                {{form_row(form.lastname)}}
-            </div>
-        </div>
-        <div class="mb-3">
-            <div class="form-group">
-                {{form_row(form.email)}}
-            </div>
-        </div>
-        <div class="mb-3">
-            <div class="form-group">
-                {{form_row(form.gender)}}
-            </div>
-        </div>
-        <div class="mb-3">
-            <div class="form-group">
-                {{ form_row(form.old_password) }}
-            </div>
-        </div>
-        <div class="mb-3">
-            <div class="form-group">
-                {{ form_row(form.new_password) }}
-            </div>
-        </div>
-    {{ form_end(form) }}
-    </div>
-</div>
 {% endblock %}

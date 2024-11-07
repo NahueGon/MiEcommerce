@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    {{title}}
+{% endblock %}
+
+{% block body %}
+    <main class="m-auto">
+        <div class="container">
+            <h1>ERROR 404</h1>
+            <p>No Existe esta pagina que buscas.</p>
+            <a href="{{ path('home') }}">Volver a la página principal</a>
+        </div>
+    </main>
+{% endblock %}

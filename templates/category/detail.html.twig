@@ -1,0 +1,73 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+	{{category.name}}
+{% endblock %}
+
+{% block body %}
+	<main>
+		<div id="carouselExampleAutoplaying" class="carousel slide mb-5" data-bs-ride="carousel">
+			<div class="carousel-inner">
+				<div class="carousel-item active">
+					<img src="{{ asset('uploads/images/products/categories/' ~ category.id) ~ '/CategoryProfileImage/' ~ category.ImgCategory}}" class="d-block w-100" style="max-height: 700px; object-fit: cover;" alt="...">
+				</div>
+                <div class="position-absolute top-0 end-0 w-100 h-100 bg-opacity-25 bg-gradient-horizontal-top p-3">
+                    <div class="row h-100 justify-content-center">
+                        <div class="col-9">
+                            <nav aria-label="breadcrumb bg-transparent">
+                                <ol class="breadcrumb breadcrumb-custom overflow-hidden text-center border-0 shadow rounded-3 p-2 m-0">
+                                    <li class="breadcrumb-item">
+                                        <a class="link-body-emphasis fw-semibold text-white text-decoration-none" href="/">
+                                            <i class="fa fa-home" aria-hidden="true"></i>
+                                            Inicio
+                                        </a>
+                                    </li>
+                                    {% if parent and grandparent %}
+                                        <li class="breadcrumb-item" aria-current="page">
+                                            <a class="link-body-emphasis fw-semibold text-white text-decoration-none" href="{{ path('show_category_slug', { 'slug': grandparent.slug }) }}">
+                                                {{ grandparent.name }}
+                                            </a>
+                                        </li>
+                                        <li class="breadcrumb-item" aria-current="page">
+                                            <a class="link-body-emphasis fw-semibold text-white text-decoration-none" href="{{ path('show_category_parent', { 'parentSlug': grandparent.slug, 'slug': parent.slug }) }}">
+                                                {{ parent.name }}
+                                            </a>
+                                        </li>
+                                        <li class="breadcrumb-item" aria-current="page">
+                                            <a class="link-body-emphasis fw-semibold text-white text-decoration-none" href="{{ path('show_category', { 'grandparentSlug': grandparent.slug, 'parentSlug': parent.slug, 'slug': category.slug }) }}">
+                                                {{ category.name }}
+                                            </a>
+                                        </li>
+                                    {% elseif parent %}
+                                        <li class="breadcrumb-item" aria-current="page">
+                                            <a class="link-body-emphasis fw-semibold text-white text-decoration-none" href="{{ path('show_category_slug', { 'slug': parent.slug }) }}">
+                                                {{ parent.name }}
+                                            </a>
+                                        </li>
+                                        <li class="breadcrumb-item" aria-current="page">
+                                            <a class="link-body-emphasis fw-semibold text-white text-decoration-none" href="{{ path('show_category_parent', { 'parentSlug': parent.slug, 'slug': category.slug }) }}">
+                                                {{ category.name }}
+                                            </a>
+                                        </li>
+                                    {% else %}
+                                        <li class="breadcrumb-item" aria-current="page">
+                                            <a class="link-body-emphasis fw-semibold text-white text-decoration-none" href="{{ path('show_category_slug', { 'slug': category.slug }) }}">
+                                                {{ category.name }}
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                               </ol>
+                            </nav>
+                        </div>
+                        <div class="col-md-5 d-flex flex-column p-lg-5 justify-content-end my-5 text-white">
+                            <h1 class="display-4 fw-normal text-center">{{category.name}}</h1>
+                            <p class="lead fw-normal d-none d-sm-block">And an even wittier subheading to boot. Jumpstart your marketing efforts with this example based on Apple’s marketing pages.</p>
+                            <a class="btn btn-outline-secondary" href="#">Ofertas</a>
+                        </div>
+                    </div>
+                </div>
+			</div>
+		</div>
+    </main>
+
+		{% endblock %}

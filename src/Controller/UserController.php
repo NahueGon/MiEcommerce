@@ -8,6 +8,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\Request;
 use App\Entity\User;
 use App\Form\UserType;
+use App\Repository\UserRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -19,50 +20,88 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 class UserController extends AbstractController
 {
     private $em;
+    private $slugger;
+    private $imagesDirectory;
+    private $userRepository;
 
-    public function __construct(EntityManagerInterface $em, SluggerInterface $slugger)
-    {
+    public function __construct(
+        EntityManagerInterface $em,
+        SluggerInterface $slugger, 
+        #[Autowire('%kernel.project_dir%/public/uploads/images/profiles')] string $imagesDirectory,
+        UserRepository $userRepository
+    ) {
         $this->em = $em;
         $this->slugger = $slugger;
+        $this->imagesDirectory = $imagesDirectory;
+        $this->userRepository = $userRepository;
     }
 
-    #[Route('/user/show/{id}', name: 'user_show')]
-    public function show(User $user): Response
+    private function findUserBySlug(string $slug): User
     {
-        $userImageDirectory = $user->getId() . '/' . $user->getImgProfile();
+        $user = $this->userRepository->findOneBySlug($slug);
+        
+        if (!$user) {
+            throw $this->createNotFoundException('Usuario no encontrado');
+        }
+        
+        return $user;
+    }
+
+    #[Route('/profile/{slug}', name: 'user_show')]
+    public function show(string $slug): Response
+    {
+        $user = $this->findUserBySlug($slug);
+        $currentUser = $this->getUser();
+
+        if ($currentUser->getSlug() !== $slug) {
+            return $this->redirectToRoute('user_show', ['slug' => $currentUser->getSlug()]);
+        }
 
         return $this->render('user/detail.html.twig', [
             'title' => 'Mi Perfil',
             'user' => $user,
-            'userImageDirectory' => $userImageDirectory,
         ]);
     }
 
-    #[Route('/user/edit/{id}', name: 'user_edit')]
-    public function edit(User $user)
+    #[Route('/profile/edit/{slug}', name: 'user_edit')]
+    public function edit(string $slug)
     {
+        $user = $this->findUserBySlug($slug);
+        $currentUser = $this->getUser();
+
+        if ($currentUser->getSlug() !== $slug) {
+            return $this->redirectToRoute('user_show', ['slug' => $currentUser->getSlug()]);
+        }
+
         $form = $this->createForm(UserType::class, $user, [
             'is_edit' => true
         ]);
-
-        $userImageDirectory = $user->getId() . '/' . $user->getImgProfile();
 
         return $this->render('user/edit.html.twig',[
             'title' => 'Editar',
             'form' => $form->createView(),
             'user' => $user,
-            'userImageDirectory' => $userImageDirectory,
         ]);
-
     }
 
-    #[Route('/user/update/{id}', name: 'user_update')]
-    public function update(User $user, Request $request, UserPasswordHasherInterface $passwordHasher,  #[Autowire('%kernel.project_dir%/public/uploads/images/profiles')] string $imagesDirectory)
-    {
+    #[Route('/profile/update/{slug}', name: 'user_update')]
+    public function update(
+        $slug,
+        Request $request,
+        UserPasswordHasherInterface $passwordHasher
+    ) {
+        $user = $this->findUserBySlug($slug);
+        $currentUser = $this->getUser();
+
+        if ($currentUser->getSlug() !== $slug) {
+            return $this->redirectToRoute('user_show', ['slug' => $currentUser->getSlug()]);
+        }
+
         $oldEmail = $user->getEmail();
         $oldName = $user->getName();
         $oldLastname = $user->getLastname();
         $oldGender = $user->getGender();
+        $oldImgProfile = $user->getImgProfile();
         
         $form = $this->createForm(UserType::class, $user, [
             'is_edit' => true
@@ -70,117 +109,61 @@ class UserController extends AbstractController
         $form->handleRequest($request);
         
         if($form->isSubmitted() && $form->isValid()){
-
-            $changes = false;
-            $userDirectory = $this->editUserDirectory($user, $imagesDirectory);
             $imageFile = $form->get('img_profile')->getData();
-
-            if ($imageFile) {
-                // $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
-                // $safeFilename = $this->slugger->slug($originalFilename);
-                $newFilename = $user->getId() .'_'. $user->getName() .'_'. $user->getLastname() .'_'.uniqid().'.'.$imageFile->guessExtension();
-                try {
-                    $userImageDirectory = $imagesDirectory . '/' . $user->getId();
-                    $this->resizeAndSaveImage($imageFile, $userImageDirectory . '/' . $newFilename);
-                    $user->setImgProfile($newFilename);
-                    $changes = true;
-                } catch (FileException $e) {
-                    flash()
-                        ->option('position', 'bottom-right')
-                        ->option('timeout', 3000)
-                        ->error('Error al subir la imagen.');
-                    return $this->redirect($this->generateUrl('user_edit', [
-                        'id' => $user->getId()
-                    ]));
-                }
-            }
 
             $plaintextOldPassword = $form->get('old_password')->getData();
             $plaintextNewPassword = $form->get('new_password')->getData();
 
-            if(empty($plaintextOldPassword) && !empty($plaintextNewPassword)){
-                flash()
-                    ->option('position', 'bottom-right')
-                    ->option('timeout', 3000)
-                    ->error('Necesitas completar el campo Contraseña Actual.');
-                return $this->redirect($this->generateUrl('user_edit', [
-                    'id' => $user->getId()
-                ]));
-            }
-
-            if(!empty($plaintextOldPassword) && empty($plaintextNewPassword)){
-                flash()
-                    ->option('position', 'bottom-right')
-                    ->option('timeout', 3000)
-                    ->error('Necesitas completar el campo Contraseña Nueva.');
-                return $this->redirect($this->generateUrl('user_edit', [
-                    'id' => $user->getId()
-                ]));
-            }
-
-            if (!empty($plaintextOldPassword) && !empty($plaintextNewPassword)) {
-
-                $isValidPassword = $passwordHasher->isPasswordValid($user, $plaintextOldPassword);
-                
-                if (!$isValidPassword)
-                {
-                    flash()
-                        ->option('position', 'bottom-right')
-                        ->option('timeout', 3000)
-                        ->error('La contraseña actual es incorrecta.');
-
-                    return $this->redirect($this->generateUrl('user_edit', [
-                        'id' => $user->getId()
-                    ]));
+            if(!empty($plaintextOldPassword) || !empty($plaintextNewPassword)){
+                if(empty($plaintextOldPassword) || empty($plaintextNewPassword)){
+                    $this->addCustomFlash('error', 'Ambos campos de contraseña deben estar completos.');
+                    return $this->redirectToRoute('user_edit', ['slug' => $user->getSlug()]);
                 }
-
+            
+                if (!$passwordHasher->isPasswordValid($user, $plaintextOldPassword)) {
+                    $this->addCustomFlash('error', 'La contraseña actual es incorrecta');
+                    return $this->redirectToRoute('user_edit', ['slug' => $user->getSlug()]);
+                }
+            
                 $hashedNewPassword = $passwordHasher->hashPassword($user, $plaintextNewPassword);
                 $user->setPassword($hashedNewPassword);
             }
 
-            
             $data = $form->getData();
 
             if ($oldEmail !== $data->getEmail()) {
                 $user->setEmail($data->getEmail());
-
-                $this->em->persist($user);
-                $this->em->flush();
-
-                flash()
-                    ->title('Exito!')
-                    ->option('position', 'bottom-right')
-                    ->option('timeout', 3000)
-                    ->success('Email actualizado');
             }
 
-            if ($oldName !== $data->getName()) {
-                $user->setName($data->getName());
-                $changes = true;
-            }
-
-            if ($oldLastname !== $data->getLastname()) {
-                $user->setLastname($data->getLastname());
-                $changes = true;
+            if ($imageFile) {
+                $this->handleImageDelete($user, $oldImgProfile);
+                $this->handleImageUpload($user, $imageFile);
+            } else {
+                $nameChanged = $oldName !== $data->getName();
+                $lastnameChanged = $oldLastname !== $data->getLastname();
+            
+                if ($nameChanged || $lastnameChanged) {
+                    $user->setName($data->getName());
+                    $user->setLastname($data->getLastname());
+            
+                    if ($oldImgProfile) {
+                        $this->handleImageRename($user, $oldImgProfile);
+                    }
+                } else {
+                    $user->setImgProfile($oldImgProfile);
+                }
             }
 
             if ($oldGender !== $data->getGender()) {
                 $user->setGender($data->getGender());
-                $changes = true;
             }
 
-            if ($changes) {
-                $this->em->persist($user);
-                $this->em->flush();
-                flash()
-                    ->title('Exito!')
-                    ->option('position', 'bottom-right')
-                    ->option('timeout', 3000)
-                    ->success('Usuario editado correctamente.');
-            }
+            $this->em->persist($user);
+            $this->em->flush();
+            $this->addCustomFlash('success', 'Usuario editado correctamente');
 
 			return $this->redirect($this->generateUrl('user_show', [
-				'id' => $user->getId()
+				'slug' => $user->getSlug()
 			]));
 		}
 
@@ -188,19 +171,72 @@ class UserController extends AbstractController
             'title' => 'Editar',
             'form' => $form->createView(),
             'user' => $user,
-            'userImageDirectory' => $userImageDirectory,
         ]);
     }
 
-    private function editUserDirectory(User $user, string $baseDirectory): string
+    private function handleImageUpload(User $user, $imgProfileFile)
     {
-        $userDirectory = $baseDirectory . '/' . $user->getId();
-        // dd($userDirectory );
-        if (!is_dir($userDirectory)) {
-            mkdir($userDirectory, 0777, true);
+        $newFilename = sprintf('%d_%s_%s.%s',
+            $user->getId(),
+            $user->getName(),
+            $user->getLastname(),
+            $imgProfileFile->guessExtension()
+        );
+
+        $userImageDirectory = $this->getUserDirectory($user) . '/' . $newFilename;
+        
+        try {
+            $this->resizeAndSaveImage($imgProfileFile, $userImageDirectory);
+            $user->setImgProfile($newFilename);
+
+        } catch (FileException $e) {
+            $this->addCustomFlash('error', 'Error al subir la imagen');
+            return $this->redirect($this->generateUrl('user_edit', [
+                'id' => $user->getId()
+            ]));
+        }
+    }
+
+    private function handleImageDelete($user, $filename): void
+    {
+        $userImageDirectory = $this->getUserDirectory($user) . '/' . $filename;
+
+        if ($filename) {
+            if (file_exists($userImageDirectory)) {
+                unlink($userImageDirectory);
+            }
+        }
+    }
+
+    private function handleImageRename($user, $filename)
+    {
+        $extension = pathinfo($filename, PATHINFO_EXTENSION);
+
+        $newFilename = sprintf('%d_%s_%s.%s',
+            $user->getId(),
+            $user->getName(),
+            $user->getLastname(),
+            $extension
+        );  
+
+        $oldFilePath = $this->getUserDirectory($user) . '/' . $filename;
+        $newFilePath =  $this->getUserDirectory($user) . '/' . $newFilename;
+
+        if (!file_exists($oldFilePath)) {
+            $this->addCustomFlash('info', 'El archivo antiguo no existe');
         }
 
-        return $userDirectory;
+        try {
+            $user->setImgProfile($newFilename);
+            rename($oldFilePath, $newFilePath);
+        } catch (\Exception $e) {
+            $this->addCustomFlash('error', 'Error al renombrar el archivo');
+        }
+    }
+
+    public function getUserDirectory($user)
+    {
+        return $this->imagesDirectory . '/' . $user->getId();
     }
 
     private function resizeAndSaveImage(UploadedFile $imageFile, string $targetPath, int $size = 300): void
@@ -221,6 +257,14 @@ class UserController extends AbstractController
 
         imagedestroy($originalImage);
         imagedestroy($newImage);
+    }
+
+    function addCustomFlash(string $type, mixed $message): void
+    {
+        flash()
+            ->option('position', 'bottom-right')
+            ->option('timeout', 3000)
+            ->$type($message);
     }
 
 }

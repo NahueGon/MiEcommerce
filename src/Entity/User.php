@@ -54,6 +54,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $img_profile = null;
 
+    #[ORM\Column(length: 255, unique: true)]
+    private ?string $slug = null;
+
     public function __construct()
     {
         $this->roles = ['ROLE_USER'];
@@ -159,7 +162,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getFullName(): ?string
     {
-        return $this->name . ' ' . $this->lastname;
+        $name = $this->name ?? '';
+        $lastname = $this->lastname ?? '';
+
+        return trim($name . ' ' . $lastname);
+    }
+
+    public function setFullName(string $fullName): self
+    {
+        $this->fullName = $fullName;
+
+        $slugify = new Slugify();
+        $this->slug = $slugify->slugify($fullName);
+
+        return $this;
     }
 
     public function getGender(): ?string
@@ -256,4 +272,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         ]));
     }
 
+    public function getSlug(): ?string
+    {
+        return $this->slug;
+    }
+
+    public function setSlug(?string $slug): self
+    {
+        $this->slug = $slug;
+
+        return $this;
+    }
 }

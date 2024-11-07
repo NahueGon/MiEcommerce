@@ -50,11 +50,14 @@ class Product
     #[ORM\Column(nullable: true)]
     private ?float $price_sale = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?float $weight = null;
-
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $brand = null;
+    private ?string $gender = null;
+
+    #[ORM\ManyToOne(inversedBy: 'sport')]
+    private ?Sport $sport = null;
+
+    #[ORM\ManyToOne(inversedBy: 'product')]
+    private ?Brand $brand = null;
 
     public function __construct()
     {
@@ -192,18 +195,6 @@ class Product
         return $this;
     }
 
-    public function getWeight(): ?float
-    {
-        return $this->weight;
-    }
-
-    public function setWeight(?float $weight): static
-    {
-        $this->weight = $weight;
-
-        return $this;
-    }
-
     public static function loadValidatorMetadata(ClassMetadata $metadata): void
     {
         $metadata->addPropertyConstraint('name', new Assert\NotBlank([
@@ -214,17 +205,8 @@ class Product
             'minMessage' => 'El nombre debe tener al menos 3 letras',
         ]));
         $metadata->addPropertyConstraint('name', new Regex([
-            'pattern' => '/^[a-zA-Z_-]+$/',
+            'pattern' => '/^[a-zA-Z0-9\s\'_-]+$/',
             'message' => 'El nombre solo debe contener letras',
-        ]));
-
-        $metadata->addPropertyConstraint('weight', new Assert\Length([
-            'min' => 1,
-            'minMessage' => 'El Precio de lista debe tener al menos 1 numero',
-        ]));
-        $metadata->addPropertyConstraint('weight', new Regex([
-            'pattern' => '/^\d+(\.\d{1,2})?$/',
-            'message' => 'El Peso solo debe contener numeros',
         ]));
 
         $metadata->addPropertyConstraint('stock', new Assert\Length([
@@ -281,12 +263,36 @@ class Product
         ]));
     }
 
-    public function getBrand(): ?string
+    public function getGender(): ?string
+    {
+        return $this->gender;
+    }
+
+    public function setGender(?string $gender): static
+    {
+        $this->gender = $gender;
+
+        return $this;
+    }
+
+    public function getSport(): ?Sport
+    {
+        return $this->sport;
+    }
+
+    public function setSport(?Sport $sport): static
+    {
+        $this->sport = $sport;
+
+        return $this;
+    }
+
+    public function getBrand(): ?Brand
     {
         return $this->brand;
     }
 
-    public function setBrand(?string $brand): static
+    public function setBrand(?Brand $brand): static
     {
         $this->brand = $brand;
 

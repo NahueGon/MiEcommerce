@@ -5,44 +5,54 @@
 {% endblock %}
 
 {% block body %}
-
-<div class="border border-light p-3">
-    <div class="border-bottom mb-2">
-        <h1>{{title}} Usuario</h1>
-    </div>
-    <div class="row">
-    {{ form_start(form, { attr: { 'data-turbo': 'false' } }) }}
-        <div class="mb-3">
-            <div class="form-group">
-                {{form_row(form.name)}}
+    <main class="vh-100 d-flex justify-content-center align-items-center">
+        <div class="container">
+            <div class="row">
+                <div class="col d-flex flex-column justify-content-center align-items-center">
+                    {{ form_start(form, {
+                        attr: {
+                            'class': 'form-signin col-lg-6 col-sm-8 shadow-sm rounded p-3 ',
+                            'data-turbo': 'false' 
+                            }
+                        }) 
+                    }}
+                        <h1 class="h3 mb-3 font-weight-normal">{{title}}</h1>
+                        <div class="d-flex flex-column flex-sm-row">
+                            <div class="form-floating flex-grow-1">
+                                {{ form_widget(form.name, { 'attr': {'class': 'name', 'placeholder': 'Nombre'} }) }}
+                                <label for="{{ form.name.vars.id }}">Nombre</label>
+                            </div>
+                            <div class="form-floating flex-grow-1">
+                                {{ form_widget(form.lastname, { 'attr': {'class': 'lastname', 'placeholder': 'Apellido'} }) }}
+                                <label for="{{ form.lastname.vars.id }}">Apellido</label>
+                            </div>
+                        </div>
+                        <div class="form-floating">
+                            {{ form_widget(form.img_profile, { 'attr': {'placeholder': 'Imagen de perfil'} }) }}
+                            <label for="{{ form.img_profile.vars.id }}">Imagen de Perfil</label>
+                        </div>
+                        <div class="form-floating">
+                            {{ form_widget(form.email, { 'attr': {'placeholder': 'Email'} }) }}
+                            <label for="{{ form.email.vars.id }}">Email</label>
+                        </div>
+                        <div class="form-floating">
+                            {{ form_widget(form.password, { 'attr': {'placeholder': 'Contraseña'} }) }}
+                            <label for="{{ form.password.vars.id }}">Contraseña</label>
+                        </div>
+                        <div class="col-lg-5 col-md-12 ms-lg-auto">
+                            <div class="row px-3">
+                                {{ form_widget(form.submit, { 'attr': {'class': 'btn btn-primary'} }) }}
+                            </div>
+                        </div>
+                    {{ form_end(form) }}
+                    <div class="row mt-3">
+                        <p>
+                            Ya tienes una cuenta?
+                            <a class="text-muted" href="{{ path('user_login') }}">Iniciar Sesion</a>
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="mb-3">
-            <div class="form-group">
-                {{form_row(form.lastname)}}
-            </div>
-        </div>
-        <div class="mb-3">
-            <div class="form-group">
-                {{form_row(form.email)}}
-            </div>
-        </div>
-        <div class="mb-3">
-            <div class="form-group">
-                {{form_row(form.password)}}
-            </div>
-        </div>
-        <div class="mb-3">
-            <div class="form-group">
-                {{form_row(form.gender)}}
-            </div>
-        </div>
-        <div class="mb-3">
-            <div class="form-group">
-                {{form_row(form.img_profile)}}
-            </div>
-        </div>
-    {{ form_end(form) }}
-    </div>
-</div>
+    </main>
 {% endblock %}

@@ -1,13 +1,91 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}
-    {{title}}
+	{{title}}
 {% endblock %}
 
 {% block body %}
-
-<div class="example-wrapper">
-    <h1>Hello {{ title }}! ✅</h1>
-
-</div>
+	<main>
+		<div id="carouselExampleAutoplaying" class="carousel slide mb-5" data-bs-ride="carousel">
+			<div class="carousel-inner">
+				<div class="carousel-item active">
+					<img src="{{ asset('uploads/images/images_ads/img_ads_1.jpg') }}" class="d-block w-100" style="max-height: 700px; object-fit: cover;" alt="...">
+				</div>
+                <div class="carousel-item">
+					<img src="{{ asset('uploads/images/images_ads/img_ads_2.jpg') }}" class="d-block w-100" style="max-height: 700px; object-fit: cover;" alt="...">
+				</div>
+                <div class="carousel-item">
+					<img src="{{ asset('uploads/images/images_ads/img_ads_3.jpg') }}" class="d-block w-100" style="max-height: 700px; object-fit: cover;" alt="...">
+				</div>
+                <div class="position-absolute top-0 end-0 w-100 h-100 bg-opacity-25 bg-gradient-horizontal-top p-3">
+                    <div class="row h-100 justify-content-center">
+                        <div class="col-9">
+                            <nav aria-label="breadcrumb bg-transparent">
+                                <ol class="breadcrumb breadcrumb-custom overflow-hidden d-none d-sm-block text-start border-0 shadow rounded-3 p-2 m-0">
+                                    <li class="breadcrumb-item">
+                                        <a class="link-body-emphasis text-white fw-semibold text-decoration-none" href="/">
+                                            <i class="fa fa-home" aria-hidden="true"></i>
+                                            {{title}}
+                                        </a>
+                                    </li>
+                                </ol>
+                            </nav>
+                        </div>
+                        <div class="col-md-8 col-lg-6 d-flex flex-column p-md-5 justify-content-end my-4 text-white " style="text-align: justify;">
+                            <h1 class="display-4 fw-normal text-center">MiEcommerce</h1>
+                            <p class="lead fw-normal d-none d-sm-block ">Descubre las últimas tendencias en ropa, zapatillas y accesorios que elevan tu estilo. Encuentra desde básicos esenciales hasta piezas de moda de temporada, todo en un solo lugar.</p>
+                        </div>
+                    </div>
+                </div>
+			</div>
+		</div>
+		<div class="container mb-5">
+			<div class="row justify-content-center">
+				<div class="col-12 d-flex justify-content-between py-3 px-0">
+					<h2>Productos</h2>
+					<button type="button" class="btn btn-primary">Ver todo</button>
+				</div>
+			</div>
+			<div class="row justify-content-center">
+				<div class="col-12 p-0">
+					<div class="scroll-container position-relative">
+						<button class="position-absolute border-0 bg-transparent scroll-button left" onclick="scrollLeft()">
+							<i class="fa fa-chevron-left"></i>
+						</button>
+						<button class="position-absolute border-0 bg-transparent scroll-button right" onclick="scrollRight()">
+							<i class="fa fa-chevron-right"></i>
+						</button>
+						<div class="overflow">
+							<div class="row d-flex flex-nowrap p-2">
+								{% for product in products %}
+									<div class="col-3 px-2">
+										<a href="" class="nav-link">
+											<div class="card-custom">
+												<div class="position-relative">
+													<img src="{{ asset('uploads/images/products/categories/' ~ product.category.id ~ '/' ~ product.imgProduct) }}" alt="{{ product.name }}" class="card-img-top" style="object-fit: cover;">
+													<div class="card-img-overlay d-flex align-items-end px-2">
+														<p class="card-title p-2 bg-dark text-white bg-opacity-50">
+															{{ (product.priceList / 100) | number_format(2, ',', '.') }} ARS
+														</p>
+													</div>
+												</div>
+												<div class="card-body p-2">
+													<p class="card-text m-0">{{product.name}}</p>
+													<p class="card-text">
+														{% for parent in product.getCategory().getParents() %}
+															{{ parent.name }}
+														{% endfor %}
+													</p>
+												</div>
+											</div>
+										</a>
+									</div>
+								{% endfor %}
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
 {% endblock %}

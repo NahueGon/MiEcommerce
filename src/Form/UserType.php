@@ -54,18 +54,6 @@ class UserType extends AbstractType
                 'placeholder' => 'Email'
             ]
         ])
-        ->add('gender', ChoiceType::class, [
-            'label' => false,
-            'required' => $options['is_edit'] ? true : false,
-            'label_attr' => [
-                'class' => self::LABEL_STYLE
-            ],
-            'choices' => [
-                'Hombre' => 'masculino',
-                'Mujer' => 'femenino',
-                'Otro' => 'otro'
-            ]
-        ])
         ->add('img_profile', FileType::class, [
             'label' => false,
             'required' => false,
@@ -99,13 +87,25 @@ class UserType extends AbstractType
                 ]
             ])
             ->add('submit', SubmitType::class, [
-                'label' => 'Enviar',
+                'label' => 'Registrarme',
                 'attr' => [
                     'class' => 'btn btn-primary'
                 ]
             ]);
         }else{
             $builder
+            ->add('gender', ChoiceType::class, [
+                'label' => false,
+                'required' => $options['is_edit'] ? true : false,
+                'label_attr' => [
+                    'class' => self::LABEL_STYLE
+                ],
+                'choices' => [
+                    'Hombre' => 'male',
+                    'Mujer' => 'female',
+                    'Otro' => 'other'
+                ],
+            ])
             ->add('old_password', PasswordType::class, [
                 'label' => false,
                 'required' => false,
