@@ -1,38 +1,45 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello CategoryController!{% endblock %}
+{% block title %}
+    {{title}}
+{% endblock %}
 
 {% block body %}
-      <div class="col-12 d-flex overflow-auto scrollbar-custom p-0" id="scroll-container-{{ category.id }}">
-        {% for product in products %}
-            {% if category.name == product.category %}
-                <div class="products col-4 col-lg-3 col-md-3 col-sm-4">
-                    <div class="card mx-1 mb-3 border-0 rounded-0 hover-card">
-                        <a class="text-decoration-none text-black" href="">
-                            <img class="card-img-top rounded" src="{{ asset('uploads/images/products/categories/' ~ product.category.id ~ '/' ~ product.imgProduct) }}" alt="{{ product.name }}" style="min-width: 170px !important;">
-                            <div class="card-body p-2">
-                            <h5 class="card-title m-0">{{ product.name }}</h5>
-                                <div class="d-flex flex-column flex-xl-row justify-content-between">
-                                    <div class="flex-grow-1 mb-2 mb-xl-0">
-                                        <p class="card-text small text-break">{{ product.description }}</p>
-                                    </div>
-                                    <p class="card-text fw-semibold mt-2 mt-md-0">$ {{ product.priceSale }}</p>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                </div>
+<main>
+    <div class="container my-5 m-auto">
+        <div class="row row-cols-2 row-cols-sm-3 row-cols-lg-3 g-2 justify-content-center justify-content-sm-start">
+            {% for category in categories %}
+					{% if category.ImgCategory %}
+						<div class="col-4">
+							<a href="{{ path('show_category_slug', { 'slug': category.slug }) }}" class="nav-link">
+								<img src="{{ asset('uploads/images/products/categories/' ~ category.id ~ '/CategoryProfileImage/' ~ category.ImgCategory) }}" 
+									alt="{{ category.name }}" 
+									class="card-img-top" 
+									style="object-fit: cover;">
+							</a>
+							<h3>{{category.name}}</h3>
+						</div>
+					{% endif %}
+				{% endfor %}
+        </div>
+
+         <!-- Controles de paginación -->
+        <div class="pagination mt-4 d-flex justify-content-center">
+            {% if currentPage > 1 %}
+                <a href="{{ path('categories', { 'page': currentPage - 1 }) }}" class="btn btn-outline-primary mx-1">Anterior</a>
             {% endif %}
-        {% endfor %}
-        {% if category.getProducts()|length >= 4 %}
-            <button class="scroll-btn-left carousel-control-prev" type="button" data-target="scroll-container-{{ category.id }}">
-                <span class="carousel-control-prev-icon text-end bg-trasparent" aria-hidden="true"></span>
-                <span class="visually-hidden">Previous</span>
-            </button>
-            <button class="scroll-btn-right carousel-control-next" type="button" data-target="scroll-container-{{ category.id }}">
-                <span class="carousel-control-next-icon bg-trasparent" aria-hidden="true"></span>
-                <span class="visually-hidden">Next</span>
-            </button>
-        {% endif %}
+
+            {% for i in 1..totalPages %}
+                <a href="{{ path('categories', { 'page': i }) }}" 
+                   class="btn mx-1 {{ currentPage == i ? 'btn-primary' : 'btn-outline-primary' }}">
+                    {{ i }}
+                </a>
+            {% endfor %}
+
+            {% if currentPage < totalPages %}
+                <a href="{{ path('categories', { 'page': currentPage + 1 }) }}" class="btn btn-outline-primary mx-1">Siguiente</a>
+            {% endif %}
+        </div>
     </div>
+</main>
 {% endblock %}

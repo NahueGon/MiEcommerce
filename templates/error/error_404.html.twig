@@ -5,11 +5,10 @@
 {% endblock %}
 
 {% block body %}
-    <main class="m-auto">
-        <div class="container">
-            <h1>ERROR 404</h1>
-            <p>No Existe esta pagina que buscas.</p>
-            <a href="{{ path('home') }}">Volver a la página principal</a>
+    <main class="m-auto mb-5">
+        <div class="container text-center">
+            <img src="/uploads/images/error/error-404.png" height="500" alt="">
+            <p>No Existe esta pagina que buscas. <a href="{{ path('home') }}">Volver a la página principal</a></p>
         </div>
     </main>
 {% endblock %}

@@ -4,6 +4,11 @@ namespace App\Controller\Admin;
 
 use App\Entity\Product;
 use App\Entity\Category;
+use App\Entity\Brand;
+use App\Entity\Sport;
+use App\Entity\Shoe;
+use App\Entity\Clothing;
+use App\Entity\Accessory;
 use App\Repository\CategoryRepository;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
@@ -20,26 +25,27 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\IntegerField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\Field;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
-use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
-class ProductCrudController extends AbstractCrudController
+abstract class AbstractProductCrudController extends AbstractCrudController
 {
     private EntityManagerInterface $em;
-    private $slugger;
+    private string $categoriesDirectory;
+    private RequestStack $requestStack;
 
     public function __construct(
         #[Autowire('%kernel.project_dir%/public/uploads/images/products/categories')] string $categoriesDirectory,
         EntityManagerInterface $em,
-        SluggerInterface $slugger
-        ) {
+        RequestStack $requestStack
+    ) {
         $this->em = $em;
         $this->categoriesDirectory = $categoriesDirectory;
-        $this->slugger = $slugger;
+        $this->requestStack = $requestStack;
     }
 
     public static function getEntityFqcn(): string
@@ -53,12 +59,11 @@ class ProductCrudController extends AbstractCrudController
             ->setEntityLabelInSingular('Producto')
             ->setEntityLabelInPlural('Productos')
             ->setSearchFields(['name', 'description'])
-            ->setDefaultSort(['id' => 'DESC']);
+            ->setDefaultSort(['gender' => 'DESC']);
     }
 
     public function configureFields(string $pageName): iterable
     {
-        
         $fields = [
             IdField::new('id')->onlyOnIndex(),
             ImageField::new('ImageUrl','Imagen')
@@ -67,8 +72,14 @@ class ProductCrudController extends AbstractCrudController
                 ->setRequired(true)
                 ->setColumns(3)
                 ->setHelp('Este campo es Obligatorio.'),
-            AssociationField::new('category', 'Categoria')
-                ->setColumns(3),
+            AssociationField::new('category', 'Categoría')
+                ->setColumns(3)
+                ->setFormTypeOptions([
+                    'query_builder' => function() {
+                        return $this->em->getRepository(Category::class)
+                                  ->createQueryBuilderForCategoriesWithoutSubCategories();
+                    },
+                ]),
             IntegerField::new('stock', 'Cantidad')
                 ->setColumns(3),
             FormField::addPanel(''),
@@ -78,20 +89,22 @@ class ProductCrudController extends AbstractCrudController
                 ->setColumns(3)
                 ->setRequired(false)
                 ->setChoices(function() {
-                    $categoryRepository = $this->em->getRepository(Category::class);
-
-                    $categoriesWithoutParents = $categoryRepository->createQueryBuilder('c')
-                        ->leftJoin('c.parents', 'p')
-                        ->where('p.id IS NULL')
-                        ->orderBy('c.name', 'ASC')
+                    $choices = [];
+                    
+                    $categoriesWithoutParents = $this->em
+                        ->getRepository(Category::class)
+                        ->createQueryBuilderForCategoriesWithoutParents()
                         ->getQuery()
                         ->getResult();
-                    
-                    $choices = [];
-                    foreach ($categoriesWithoutParents as $category) {
-                        $choices[$category->getName()] = $category->getId();
+            
+                    if ($categoriesWithoutParents) {
+                        foreach ($categoriesWithoutParents as $category) {
+                            $choices[$category->getName()] = $category->getName();
+                        }
+                    } else {
+                        $choices['Sin categoría'] = 'Sin categoría';
                     }
-
+            
                     return $choices;
                 }),
             AssociationField::new('sport', 'Deporte')
@@ -102,9 +115,6 @@ class ProductCrudController extends AbstractCrudController
                 ->setRequired(true)
                 ->setColumns(3)
                 ->setHelp('Este campo es Obligatorio.'),
-            MoneyField::new('price_sale', 'Precio Final')
-                ->setCurrency('ARS')
-                ->setColumns(3),
         ];
 
         if (Crud::PAGE_NEW === $pageName) {
@@ -135,15 +145,26 @@ class ProductCrudController extends AbstractCrudController
         $fields[] = 
             TextEditorField::new('description', 'Descripcion')->setColumns(6);
             IntegerField::new('views', 'Vistas')->onlyOnIndex();
-            DateTimeField::new('created_at', 'Fecha de Creacion')->onlyOnIndex();
-            DateTimeField::new('updated_at', 'Fecha de Actualizacion')->onlyOnIndex();
 
         return $fields;
     }
 
     public function createEntity(string $entityFqcn)
     {
-        $product = new Product();
+        switch ($entityFqcn) {
+            case Shoe::class:
+                $product = new Shoe();
+                break;
+            case Clothing::class:
+                $product = new Clothing();
+                break;
+            case Accessory::class:
+                $product = new Accessory();
+                break;
+            default:
+                throw new \InvalidArgumentException('Unsupported product type: ' . $entityFqcn);
+        }
+
         $product->setCreatedAt(new \DateTime('now', new \DateTimeZone('America/Argentina/Buenos_Aires')));
 
         return $product;
@@ -153,22 +174,30 @@ class ProductCrudController extends AbstractCrudController
     {
         if ($product instanceof Product) {
             $this->sanitizeProduct($product);
-            $this->handleCreateCategory($em, $product);
-            $this->ensureCategoryDirectoryExists($product);
+            $this->createCategory($product);
+            $this->categoryDirectoryExists($product);
+            
+            if ($product instanceof Shoe) {
+                $productType = 'Shoe'; 
+            } elseif ($product instanceof Clothing) {
+                $productType = 'Clothing'; 
+            } elseif ($product instanceof Accessory) {
+                $productType = 'Accessory'; 
+            }
 
-            $imgProductFile = $this->getContext()->getRequest()->files->get('Product')['img_product'];
+            $request = $this->requestStack->getCurrentRequest();
+            $imgProductFile = $request->files->get($productType)['img_product'];
 
             try {
                 $em->persist($product);
                 $em->flush();
-
-                $this->handleImageUpload($product, $imgProductFile);
                 
+                $this->imageUpload($product, $imgProductFile);
                 flash()
-                    ->title('Exito!')
-                    ->option('timeout', 3000)
-                    ->success('Producto creado!' );
-
+                ->title('Exito!')
+                ->option('timeout', 3000)
+                ->success('Producto creado!' );
+                
                 parent::persistEntity($em, $product);
             }catch(\Exception $e){
                 flash()
@@ -184,10 +213,6 @@ class ProductCrudController extends AbstractCrudController
     public function sanitizeProduct(Product $product): void{
         $name = strip_tags($product->getName());
         $product->setName($name);
-       
-        if ($brand = $product->getBrand()) {
-            $product->setBrand(strip_tags($brand));
-        }
 
         if ($description = $product->getDescription()) {
             $sanitizedDescription = preg_replace('/\s+/', ' ', strip_tags(str_replace('&nbsp;', ' ', $description)));
@@ -195,90 +220,60 @@ class ProductCrudController extends AbstractCrudController
         }
     }
 
-    private function ensureCategoryDirectoryExists(Product $product): void
+    private function categoryDirectoryExists(Product $product): void
     {
         $categoryId = $product->getCategory()->getId();
         $categoryDirectory = $this->categoriesDirectory . '/' . $categoryId;     
-
+        
         if (!is_dir($categoryDirectory)) {
             mkdir($categoryDirectory, 0777, true);
         }
     }
 
-    private function handleImageUpload(Product $product, $imgProductFile): void
-    {
-        $categoryId = $product->getCategory()->getId();
-        $newFilename = sprintf('%d_%s.%s',
-            $product->getId(),
-            $product->getName(),
-            $imgProductFile->guessExtension()
-        );
-
-        $productImageDirectory = $this->categoriesDirectory . '/' . $categoryId . '/' . $newFilename;
-
-        try {
-            $this->resizeAndSaveImage($imgProductFile, $productImageDirectory);
-            $product->setImgProduct($newFilename);
-        } catch (\Exception $e) {
-            throw new \RuntimeException('Error al subir la imagen: ' . $e->getMessage());
-        }
-    }
-
-    private function handleCreateCategory(EntityManagerInterface $em, Product $product): void
+    private function createCategory(Product $product): void
     {
         if(empty($product->getCategory())){
-            $defaultCategory = $em->getRepository(Category::class)
+            $defaultCategory = $this->em->getRepository(Category::class)
                 ->findOneBy(['name' => 'Sin especificar']);
 
             if (!$defaultCategory) {
                 $defaultCategory = new Category();
                 $defaultCategory->setName('Sin especificar');
 
-                $em->persist($defaultCategory);
-                $em->flush();
+                $this->em->persist($defaultCategory);
+                $this->em->flush();
             }
 
             $product->setCategory($defaultCategory);
         }
-    }
-    
-    private function resizeAndSaveImage(UploadedFile $imgProductFile, string $targetPath, int $size = 300): void
-    {
-        $originalImage = imagecreatefromstring(file_get_contents($imgProductFile->getPathname()));
-        list($originalWidth, $originalHeight) = getimagesize($imgProductFile->getPathname());
-
-        $cropSize = min($originalWidth, $originalHeight);
-
-        $newImage = imagecreatetruecolor($size, $size);
-
-        $xOffset = ($originalWidth - $cropSize) / 2;
-        $yOffset = ($originalHeight - $cropSize) / 2;
-
-        imagecopyresampled($newImage, $originalImage, 0, 0, $xOffset, $yOffset, $size, $size, $cropSize, $cropSize);
-
-        imagejpeg($newImage, $targetPath, 100);
-
-        imagedestroy($originalImage);
-        imagedestroy($newImage);
     }
 
     public function updateEntity(EntityManagerInterface $em, $product): void
     {
         if ($product instanceof Product) {
             $this->sanitizeProduct($product);
-            $this->handleCreateCategory($em, $product);
-            $this->ensureCategoryDirectoryExists($product);
-
-            $imgProductFile = $this->getContext()->getRequest()->files->get('Product')['img_product'];
+            $this->createCategory($product);
+            $this->categoryDirectoryExists($product);
+            $product->setUpdatedAt(new \DateTime('now', new \DateTimeZone('America/Argentina/Buenos_Aires')));
 
             $originalData = $em->getUnitOfWork()->getOriginalEntityData($product);
 
-            $oldCategoryId = $originalData['category_id'];
-            $newCategoryId = $product->getCategory()->getId();
-
             $oldName = $originalData['name'];
             $oldFilename = $originalData['img_product'];
+            $oldCategoryId = $originalData['category_id'];
 
+            if ($product instanceof Shoe) {
+                $productType = 'Shoe'; 
+            } elseif ($product instanceof Clothing) {
+                $productType = 'Clothing'; 
+            } elseif ($product instanceof Accessory) {
+                $productType = 'Accessory'; 
+            }
+            
+            $request = $this->requestStack->getCurrentRequest();
+            $imgProductFile = $request->files->get($productType)['img_product'];
+
+            $newCategoryId = $product->getCategory()->getId();
             $newName = $product->getName();
 
             try {
@@ -286,11 +281,11 @@ class ProductCrudController extends AbstractCrudController
                 $em->flush();
 
                 if ($imgProductFile instanceof UploadedFile) {
-                    $this->handleImageDelete($product, $oldFilename, $oldCategoryId);
-                    $this->handleImageUpload($product, $imgProductFile);
+                    $this->imageDelete($product, $oldFilename, $oldCategoryId);
+                    $this->imageUpload($product, $imgProductFile);
                 } else {
                     if ($newName != $oldName || $newCategoryId != $oldCategoryId) {
-                        $this->handleImageRename($product, $oldFilename, $oldCategoryId);
+                        $this->imageRename($product, $oldFilename, $oldCategoryId);
                     } else {
                         $product->setImgProduct($oldFilename);
                     }
@@ -310,7 +305,90 @@ class ProductCrudController extends AbstractCrudController
         }
     }
 
-    public function handleImageRename($product, $filename, $categoryId = null): void
+    public function deleteEntity(EntityManagerInterface $em, $product): void
+    {
+        $filename = $product->getImgProduct();
+        $categoryId = $product->getCategory()->getId();
+        
+        try {
+            $this->imageDelete($product, $filename, $categoryId);
+            flash()
+                ->title('Exito!')
+                ->option('timeout', 3000)
+                ->success('Producto Eliminado Correctamente.');
+
+            parent::deleteEntity($em, $product);
+        } catch (Exception $e) {
+            flash()
+                ->title('Exito!')
+                ->option('timeout', 3000)
+                ->success('Error al eliminar el archivo.');
+        }
+    }
+
+    private function imageUpload(Product $product, $imgProductFile): void
+    {
+        $categoryId = $product->getCategory()->getId();
+        $newFilename = sprintf('%d_%s.%s',
+            $product->getId(),
+            $product->getName(),
+            $imgProductFile->guessExtension()
+        );
+
+        $productImageDirectory = $this->categoriesDirectory . '/' . $categoryId . '/' . $newFilename;
+
+        try {
+            $this->uploadAndResizeImage($imgProductFile, $productImageDirectory);
+            $product->setImgProduct($newFilename);
+        } catch (\Exception $e) {
+            throw new \RuntimeException('Error al subir la imagen: ' . $e->getMessage());
+        }
+    }
+
+    private function uploadAndResizeImage(UploadedFile $imgProductFile, string $targetPath, int $size = 300): void
+    {
+        $originalImage = imagecreatefromstring(file_get_contents($imgProductFile->getPathname()));
+        list($originalWidth, $originalHeight) = getimagesize($imgProductFile->getPathname());
+
+        $cropSize = min($originalWidth, $originalHeight);
+
+        $newImage = imagecreatetruecolor($size, $size);
+
+        $xOffset = ($originalWidth - $cropSize) / 2;
+        $yOffset = ($originalHeight - $cropSize) / 2;
+
+        imagecopyresampled($newImage, $originalImage, 0, 0, $xOffset, $yOffset, $size, $size, $cropSize, $cropSize);
+
+        imagejpeg($newImage, $targetPath, 100);
+
+        imagedestroy($originalImage);
+        imagedestroy($newImage);
+    }
+    
+    public function imageDelete($product, $filename, $categoryId)
+    {
+        $productImageDirectory = $this->categoriesDirectory . '/' . $categoryId . '/' . $filename;
+        
+        if (!file_exists($productImageDirectory)) {
+            flash()
+                ->title('Información')
+                ->option('timeout', 3000)
+                ->info('El archivo no existe en el sistema.');
+
+                return $this->redirect($this->generateUrl('admin'));
+        }
+
+        try {
+            unlink($productImageDirectory);
+        } catch (\Exception $e) {
+            flash()
+                ->title('Error')
+                ->option('timeout', 3000)
+                ->error('Error al eliminar la imagen: ' . $e->getMessage());
+        }
+    }
+
+    public function imageRename($product, $filename, $categoryId = null): void
     {
         if ($categoryId === null) {
             $categoryId = $product->getCategory()->getId();
@@ -341,43 +419,6 @@ class ProductCrudController extends AbstractCrudController
             flash()
                 ->option('timeout', 3000)
                 ->error('Error al renombrar el archivo: ' . $e->getMessage());
-        }
-    }
-    
-    public function handleImageDelete($product, $filename, $categoryId)
-    {
-        $productImageDirectory = $this->categoriesDirectory . '/' . $categoryId . '/' . $filename;
-        
-        if (!file_exists($productImageDirectory)) {
-            flash()
-                ->title('Información')
-                ->option('timeout', 3000)
-                ->info('El archivo no existe en el sistema.');
-
-                return $this->redirect($this->generateUrl('admin'));
-        }
-
-        unlink($productImageDirectory);
-    }
-
-    public function deleteEntity(EntityManagerInterface $em, $product): void
-    {
-        $filename = $product->getImgProduct();
-        $categoryId = $product->getCategory()->getId();
-        
-        try {
-            $this->handleImageDelete($product, $filename, $categoryId);
-            flash()
-                ->title('Exito!')
-                ->option('timeout', 3000)
-                ->success('Producto Eliminado Correctamente.');
-
-            parent::deleteEntity($em, $product);
-        } catch (Exception $e) {
-            flash()
-                ->title('Exito!')
-                ->option('timeout', 3000)
-                ->success('Error al eliminar el archivo.');
         }
     }
 }

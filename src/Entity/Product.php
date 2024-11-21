@@ -13,7 +13,10 @@ use Symfony\Component\Validator\Mapping\ClassMetadata;
 use Symfony\Component\Validator\Constraints\File;
 
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
-class Product
+#[ORM\InheritanceType("JOINED")]
+#[ORM\DiscriminatorColumn(name: "product_type", type: "string")]
+#[ORM\DiscriminatorMap(["product" => "Product", "clothing" => "Clothing", "shoe" => "Shoe", "accessory" => "Accessory"])]
+abstract class Product
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -249,18 +252,18 @@ class Product
             'minMessage' => 'La Descripcion debe tener al menos 15 caracteres',
         ]));
 
-        $metadata->addPropertyConstraint('img_product', new Assert\File([
-            'maxSize' => '1024k',
-            'maxSizeMessage' => 'Es demasiado pesada la imagen',
-            'mimeTypes' => [
-                    'image/jpg',
-                    'image/jpeg',
-                    'image/png',
-                    'image/gif',
-                    'image/jfif',
-            ],
-            'mimeTypesMessage' => 'Por favor sube un formato valido de imagen. "jpg, jpeg, png"',
-        ]));
+        // $metadata->addPropertyConstraint('img_product', new Assert\File([
+        //     'maxSize' => '1024k',
+        //     'maxSizeMessage' => 'Es demasiado pesada la imagen',
+        //     'mimeTypes' => [
+        //             'image/png',
+        //             'image/jpg',
+        //             'image/jpeg',
+        //             'image/gif',
+        //             'image/jfif',
+        //     ],
+        //     'mimeTypesMessage' => 'Por favor sube un formato valido de imagen. "jpg, jpeg, png"',
+        // ]));
     }
 
     public function getGender(): ?string

@@ -7,6 +7,9 @@ use App\Entity\Product;
 use App\Entity\Category;
 use App\Entity\Sport;
 use App\Entity\Brand;
+use App\Entity\Shoe;
+use App\Entity\Clothing;
+use App\Entity\Accessory;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
@@ -62,10 +65,13 @@ class DashboardController extends AbstractDashboardController
             MenuItem::section('Usuarios'),
             MenuItem::linkToCrud('Usuarios', 'fa fa-users', User::class),
             MenuItem::section('Productos'),
-            MenuItem::linkToCrud('Productos', 'fa fa-shopping-cart', Product::class),
+            // MenuItem::linkToCrud('Productos', 'fa fa-shopping-cart', Product::class),
+            MenuItem::linkToCrud('Zapatillas', 'fa-solid fa-shoe-prints', Shoe::class),
+            MenuItem::linkToCrud('Ropa', 'fa-solid fa-shirt', Clothing::class),
+            MenuItem::linkToCrud('Accesorios', 'fa-solid fa-hat-cowboy', Accessory::class),
             MenuItem::linkToCrud('Categorias', 'fa fa-th-list', Category::class),
-            MenuItem::linkToCrud('Deportes', 'fa fa-th-list', Sport::class),
-            MenuItem::linkToCrud('Marcas', 'fa fa-th-list', Brand::class),
+            MenuItem::linkToCrud('Deportes', 'fa-solid fa-basketball', Sport::class),
+            MenuItem::linkToCrud('Marcas', 'fa-brands fa-bandcamp', Brand::class),
         ];
     }
 

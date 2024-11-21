@@ -16,19 +16,31 @@ class CategoryController extends AbstractController
         $this->categoryRepository = $categoryRepository;
     }
 
-    // #[Route('/c', name: 'app_category')]
-    // public function index(): Response
-    // {
+    #[Route('/c/todos/{page}', name: 'categories', defaults: ['page' => 1], requirements: ['page' => '\d+'])]
+    public function index(CategoryRepository $categoryRepository, int $page): Response
+    {
+        $categoriesPerPage = 12;
+        $totalCategories = $categoryRepository->count([]);
+        $totalPages = ceil($totalCategories / $categoriesPerPage);
 
-    //     return $this->render('category/index.html.twig', [
-    //         'controller_name' => 'CategoryController',
-    //     ]);
-    // }
+        $offset = ($page - 1) * $categoriesPerPage;
+
+        $categories = $categoryRepository->findBy([], null, $categoriesPerPage, $offset);
+
+        shuffle($categories);
+
+        return $this->render('category/index.html.twig', [
+            'title' => 'Todas las Categorias',
+            'categories' => $categories,
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+        ]);
+    }
 
     #[Route('/c/{slug}', name: 'show_category_slug')]
     #[Route('/c/{parentSlug}/{slug}', name: 'show_category_parent')]
     #[Route('/c/{grandparentSlug}/{parentSlug}/{slug}', name: 'show_category')]
-    public function showCategory(?string $grandparentSlug, ?string $parentSlug, string $slug): Response
+    public function show(?string $grandparentSlug, ?string $parentSlug, string $slug): Response
     {
         $grandparent = null;
         $parent = null;

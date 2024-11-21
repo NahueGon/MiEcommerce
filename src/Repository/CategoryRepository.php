@@ -41,6 +41,22 @@ class CategoryRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function createQueryBuilderForCategoriesWithoutSubCategories()
+    {
+        return $this->createQueryBuilder('c')
+            ->leftJoin('c.subCategories', 's')
+            ->where('s.id IS NULL')  // Filtra solo las categorías sin subcategorías
+            ->orderBy('c.name', 'ASC');
+    }
+
+    public function createQueryBuilderForCategoriesWithoutParents()
+    {
+        return $this->createQueryBuilder('c')
+            ->leftJoin('c.parents', 'p')
+            ->where('p.id IS NULL')  // Solo categorías sin padres
+            ->orderBy('c.name', 'ASC');
+    }
     
     //    /**
     //     * @return Category[] Returns an array of Category objects
