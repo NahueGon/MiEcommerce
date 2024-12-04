@@ -27,6 +27,12 @@ class Sport
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $description = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $img_sport = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $slug = null;
+
     public function __construct()
     {
         $this->sport = new ArrayCollection();
@@ -94,5 +100,34 @@ class Sport
     public function __toString(): string
     {
         return (string) $this->getName();
+    }
+
+    public function getImgSport(): ?string
+    {
+        return $this->img_sport;
+    }
+
+    public function setImgSport(?string $img_sport): static
+    {
+        $this->img_sport = $img_sport;
+
+        return $this;
+    }
+
+    public function getImageUrl(): ?string
+    {
+        return '/uploads/images/products/sports/' . $this->getId() . '/' . $this->img_sport;
+    }
+
+    public function getSlug(): ?string
+    {
+        return $this->slug;
+    }
+
+    public function setSlug(string $slug): static
+    {
+        $this->slug = $slug;
+
+        return $this;
     }
 }

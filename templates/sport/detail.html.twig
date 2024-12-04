@@ -1,0 +1,62 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    {{title}}
+{% endblock %}
+
+{% block body %}
+<main>
+    <div class="container my-5 m-auto d-flex flex-column " style="min-height: 400px;">
+        {% if products is not empty %}
+            <div class="row row-cols-2 mb-5 row-cols-sm-3 row-cols-lg-4 g-3 justify-content-center justify-content-sm-start">
+                {% for product in products %}
+                        <div class="col-5">
+                            <a href="" class="nav-link">   
+                                <div class="card-custom h-100">
+                                    <div class="card-custom">
+                                        <div class="position-relative">
+                                            <img src="{{ asset('uploads/images/products/categories/' ~ product.category.id ~ '/' ~ product.imgProduct) }}" alt="{{ product.name }}" class="card-img-top" style="object-fit: cover;">
+                                            <div class="card-img-overlay d-flex align-items-end px-2">
+                                                <p class="card-title p-2 bg-dark text-white bg-opacity-25 ">
+                                                    {{ (product.priceList / 100) | number_format(2, ',', '.') }} ARS
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="card-body p-2">
+                                            <p class="card-text m-0 fw-medium">{{product.name}}</p>
+                                            <p class="card-text text-muted">
+                                                {{ product.category }} {{ product.brand }} para {{ product.gender == "Sin Especificar" ? product.sport : product.gender }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="col-12 text-center">
+                No se encontraron productos de {{title}}
+            </div>
+        {% endif %}
+
+        <!-- Controles de paginación -->
+        <div class="pagination mt-4 d-flex justify-content-center mt-auto">
+            {% if currentPage > 1 %}
+                <a href="{{ path('sport', { 'slug': sport.slug, 'page': currentPage - 1 }) }}" class="btn btn-outline-primary mx-1">Anterior</a>
+            {% endif %}
+
+            {% for i in 1..totalPages %}
+                <a href="{{ path('sport', { 'slug': sport.slug, 'page': i }) }}" 
+                class="btn mx-1 {{ currentPage == i ? 'btn-primary' : 'btn-outline-primary' }}">
+                    {{ i }}
+                </a>
+            {% endfor %}
+
+            {% if currentPage < totalPages %}
+                <a href="{{ path('sport', { 'slug': sport.slug, 'page': currentPage + 1 }) }}" class="btn btn-outline-primary mx-1">Siguiente</a>
+            {% endif %}
+        </div>
+    </div>
+</main>
+{% endblock %}

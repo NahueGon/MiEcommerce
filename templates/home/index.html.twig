@@ -11,73 +11,188 @@
 				<div class="carousel-item active">
 					<img src="{{ asset('uploads/images/images_ads/img_ads_1.jpg') }}" class="d-block w-100" style="max-height: 700px; object-fit: cover;" alt="...">
 				</div>
-                <div class="carousel-item">
+				<div class="carousel-item">
 					<img src="{{ asset('uploads/images/images_ads/img_ads_2.jpg') }}" class="d-block w-100" style="max-height: 700px; object-fit: cover;" alt="...">
 				</div>
-                <div class="carousel-item">
+				<div class="carousel-item">
 					<img src="{{ asset('uploads/images/images_ads/img_ads_3.jpg') }}" class="d-block w-100" style="max-height: 700px; object-fit: cover;" alt="...">
 				</div>
-                <div class="position-absolute top-0 end-0 w-100 h-100 bg-opacity-25 bg-gradient-horizontal-top p-3">
-                    <div class="row h-100 justify-content-center">
-                        <div class="col-9">
-                            <nav aria-label="breadcrumb bg-transparent">
-                                <ol class="breadcrumb breadcrumb-custom overflow-hidden d-none d-sm-block text-start border-0 shadow rounded-3 p-2 m-0">
-                                    <li class="breadcrumb-item">
-                                        <a class="link-body-emphasis text-white fw-semibold text-decoration-none" href="/">
-                                            <i class="fa fa-home" aria-hidden="true"></i>
-                                            {{title}}
-                                        </a>
-                                    </li>
-                                </ol>
-                            </nav>
-                        </div>
-                        <div class="col-md-8 col-lg-6 d-flex flex-column p-md-5 justify-content-end my-4 text-white " style="text-align: justify;">
-                            <h1 class="display-4 fw-normal text-center">MiEcommerce</h1>
-                            <p class="lead fw-normal d-none d-sm-block ">Descubre las últimas tendencias en ropa, zapatillas y accesorios que elevan tu estilo. Encuentra desde básicos esenciales hasta piezas de moda de temporada, todo en un solo lugar.</p>
-                        </div>
-                    </div>
-                </div>
-			</div>
-		</div>
-		<div class="container mb-5">
-			<div class="row justify-content-center">
-				<div class="col-12 d-flex justify-content-between p-2">
-					<h2>Productos</h2>
-					<a href="{{ path('products') }}" class="btn btn-primary">Ver todo</a>
+				<div class="position-absolute top-0 end-0 w-100 h-100 bg-opacity-50 bg-gradient-vertical-top bg-black p-3">
+					<div class="d-flex w-100 h-100 flex-column justify-content-center align-items-center">
+						<h1 class="display-1 fw-bold text-uppercase text-white pt-5 my-5" style="letter-spacing: 3px; font-size: 6vw;">MiEcommerce</h1>
+						<div class="col-6 pt-md-0 p-md-5 mb-5 text-white text-center">
+							<p class="lead fw-normal d-none fs-4 fst-italic d-sm-block">Descubre las últimas tendencias en ropa, zapatillas y accesorios que elevan tu estilo. Encuentra desde básicos esenciales hasta piezas de moda de temporada, todo en un solo lugar.</p>
+						</div>
+					</div>
 				</div>
 			</div>
-			<div class="row justify-content-center mb-5">
-				<div class="scroll-container position-relative">
-					<button class="position-absolute border-0 bg-transparent scroll-button left" onclick="scrollLeft()">
+		</div>
+		
+		<div class="d-flex mb-5 p-2">
+			{% for category in categories %}
+				<div class="img-categories mx-1">
+					<a href="{{ path('show_category_slug', { 'slug': category.slug }) }}" class="nav-link overflow-hidden">
+						<div class="position-relative category-custom">
+							<img src="{{ asset('uploads/images/products/categories/' ~ category.id ~ '/CategoryProfileImage/' ~ category.ImgCategory) }}" alt="{{ category.name }}" class="card-img-top" height="600" style="object-fit: cover;">
+							<div class="card-img-overlay d-flex align-items-end p-4 pb-md-5 p-lg-5 bg-opacity-25 bg-black">
+								<span class="d-none custom-flag d-md-block bg-white display-6 fw-bold text-uppercase p-1" style="letter-spacing: 2px;">
+									{{category.name}}
+								</span>
+							</div>
+						</div>
+					</a>
+					<span class="display-6 d-md-none fw-bold text-uppercase p-1" style="letter-spacing: 2px;">
+						{{category.name}}
+					</span>
+				</div>
+			{% endfor %}
+		</div>
+
+		<div class="container mb-5">
+			<div class="d-flex justify-content-between py-3">
+				<h3>Productos</h3>
+				<a href="{{ path('products') }}" class="btn btn-primary" role="button">Ver todo</a>
+			</div>
+			<div class="d-flex justify-content-center">
+				<div id="containerProductos" class="scroll-container position-relative">
+					<button data-target="containerProductos" class="position-absolute border-0 bg-transparent scroll-button left">
 						<i class="fa fa-chevron-left bg-light p-2 rounded-circle bg-opacity-75"></i>
 					</button>
-					<button class="position-absolute border-0 bg-transparent scroll-button right" onclick="scrollRight()">
+					<button data-target="containerProductos" class="position-absolute border-0 bg-transparent scroll-button right">
 						<i class="fa fa-chevron-right bg-light p-2 rounded-circle bg-opacity-75"></i>
 					</button>
 					<div class="overflow">
-						<div class="row d-flex flex-nowrap row-cols-2 row-cols-sm-3 row-cols-lg-4 g-2">
+						<div class="row d-flex flex-nowrap row-cols-4 row-cols-sm-4 row-cols-md-4 row-cols-lg-4 g-2">
 							{% for product in products %}
 								{% if product.category  != 'Sin Especificar' %}
-									<div class="col-3">
-										<a href="" class="nav-link">
-											<div class="card-custom">
-												<div class="position-relative">
-													<img src="{{ asset('uploads/images/products/categories/' ~ product.category.id ~ '/' ~ product.imgProduct) }}" alt="{{ product.name }}" class="card-img-top" style="object-fit: cover;">
-													<div class="card-img-overlay d-flex align-items-end px-2">
-														<p class="card-title p-2 bg-dark text-white bg-opacity-25 ">
-															{{ (product.priceList / 100) | number_format(2, ',', '.') }} ARS
-														</p>
+										<div class="card-custom p-0 mx-1 position-relative overflow-hidden" style="max-width: 318px;">
+											<a href="{{ path('show_product', { 'slug': product.slug}) }}" class="nav-link" >
+												{% if product.discount %}
+													<span class="text-white custom-flag bg-danger text-uppercase px-2 fw-bold fs-3">
+														Sale
+													</span>
+												{% endif %}
+												<img src="{{ asset('uploads/images/products/categories/' ~ product.category.id ~ '/' ~ product.imgProduct) }}" alt="{{ product.name }}" class="card-img-top h-100" style="object-fit: cover;">
+												<div class="card-body p-2">
+													<div class="d-flex">
+														{% if product.salePrice < product.priceList %}
+															<span class="fw-medium pe-2">
+																{{ (product.salePrice / 100) | number_format(0, ',', '.') }}
+																ARS
+															</span>
+															<del class="text-danger fw-medium flex-grow-1">
+																{{ (product.priceList / 100) | number_format(0, ',', '.') }}
+																ARS
+															</del>
+														{% else %}
+															<span class="fw-medium">
+																{{ (product.priceList / 100) | number_format(0, ',', '.') }}
+																ARS
+															</span>
+														{% endif %}
 													</div>
-												</div>
-												<div class="card-body p-2 pb-0">
+													{% if product.discount %}
+														<span class="fw-medium text-success">{{product.discount}}% de descuento</span>
+													{% endif %}
 													<p class="card-text m-0 fw-medium">{{product.name}}</p>
 													<p class="card-text text-muted">
-														{{ product.category }} {{ product.brand }} para {{ product.gender == "Sin Especificar" ? product.sport : product.gender }}
+														{{ product.category }}
+														{{ product.brand }}
+														para
+														{{ product.gender == "Sin Especificar" ? product.sport : product.gender }}
 													</p>
 												</div>
+											</a>
+										</div>
+								{% endif %}
+							{% endfor %}
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="container-fluid p-0">
+			<div class="d-flex justify-content-center mb-5">
+				<div id="containerDeportes" class="scroll-container position-relative p-0">
+					<button data-target="containerDeportes" class="position-absolute border-0 bg-transparent scroll-button left">
+						<i class="fa fa-chevron-left bg-light p-2 rounded-circle bg-opacity-75"></i>
+					</button>
+					<button data-target="containerDeportes" class="position-absolute border-0 bg-transparent scroll-button right">
+						<i class="fa fa-chevron-right bg-light p-2 rounded-circle bg-opacity-75"></i>
+					</button>
+					<div class="overflow">
+						<div class="row d-flex flex-nowrap row-cols-2 row-cols-sm-3 row-cols-lg-3 row-cols-lg-4 g-0">
+							{% for sport in sports %}
+								<div class="col-4">
+									<a href="{{ path('sport', { 'slug': sport.slug }) }}" class="nav-link overflow-hidden">
+										<div class="position-relative sport-custom">
+											<img src="{{ asset('uploads/images/products/sports/' ~ sport.id ~ '/' ~ sport.ImgSport) }}" alt="{{ sport.name }}" class="card-img-top" height="600" style="object-fit: cover;">
+											<div class="card-img-overlay bg-opacity-25 bg-black px-sm-3 px-lg-4 pb-5 d-flex justify-content-start align-items-end p-5">
+												<span class="bg-white custom-flag d-none d-md-block display-6 fw-bold text-uppercase p-1" style="letter-spacing: 2px;">
+													{{sport.name}}
+												</span>
 											</div>
-										</a>
-									</div>
+										</div>
+									</a>
+									<span class="fs-6 d-md-none fw-bold text-uppercase p-1" style="letter-spacing: 2px;">
+										{{sport.name}}
+									</span>
+								</div>
+							{% endfor %}
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="container mb-5">
+			<div class="d-flex justify-content-between py-3">
+				<h3>Ofertas</h3>
+				<a href="{{ path('products') }}" class="btn btn-primary" role="button">Ver todo</a>
+			</div>
+			<div class="d-flex justify-content-center mb-5">
+				<div id="containerOfertas" class="scroll-container position-relative">
+					{% if discountedProducts|length > 4 %}
+						<button data-target="containerOfertas" class="position-absolute border-0 bg-transparent scroll-button left">
+							<i class="fa fa-chevron-left bg-light p-2 rounded-circle bg-opacity-75"></i>
+						</button>
+						<button data-target="containerOfertas" class="position-absolute border-0 bg-transparent scroll-button right">
+							<i class="fa fa-chevron-right bg-light p-2 rounded-circle bg-opacity-75"></i>
+						</button>
+					{% endif %}
+					<div class="overflow">
+						<div class="row d-flex flex-nowrap row-cols-3 row-cols-sm-3 row-cols-md-3 row-cols-lg-4 g-2">
+							{% for discountedProduct in discountedProducts %}
+								{% if discountedProduct.category  != 'Sin Especificar' %}
+										<div class="card-custom p-0 mx-1 position-relative overflow-hidden" style="max-width: 318px;">
+											<a href="" class="nav-link">
+												<span class="text-white custom-flag bg-danger text-uppercase px-2 fw-bold fs-3">
+													Sale
+												</span>
+												<img src="{{ asset('uploads/images/products/categories/' ~ discountedProduct.category.id ~ '/' ~ discountedProduct.imgProduct) }}" alt="{{ discountedProduct.name }}" class="card-img-top" style="object-fit: cover;">
+												<div class="card-body p-2">
+													<div class="d-flex">
+														<span class="fw-medium pe-2">
+															{{ (discountedProduct.salePrice / 100) | number_format(0, ',', '.') }}
+															ARS
+														</span>
+														<del class="text-danger fw-medium flex-grow-1">
+															{{ (discountedProduct.priceList / 100) | number_format(0, ',', '.') }}
+															ARS
+														</del>
+													</div>
+													<span class="fw-medium text-success">{{discountedProduct.discount}}% de descuento</span>
+													<p class="card-text m-0 fw-medium">{{discountedProduct.name}}</p>
+													<p class="card-text text-muted">
+														{{ discountedProduct.category }}
+														{{ discountedProduct.brand }}
+														para
+														{{ discountedProduct.gender == "Sin Especificar" ? discountedProduct.sport : discountedProduct.gender }}
+													</p>
+												</div>
+											</a>
+										</div>
 								{% endif %}
 							{% endfor %}
 						</div>
@@ -87,28 +202,64 @@
 		</div>
 
 		<div class="container-fluid">
-			<div class="row g-3 mb-5">
-				{% for category in categories %}
-					<div class="col-4">
-						<a href="{{ path('show_category_slug', { 'slug': category.slug }) }}" class="nav-link">
-							<div class="">
-								<div class="position-relative">
-									<img src="{{ asset('uploads/images/products/categories/' ~ category.id ~ '/CategoryProfileImage/' ~ category.ImgCategory) }}" 
-										alt="{{ category.name }}" 
-										class="card-img-top" 
-										style="object-fit: cover;">
-									<div class="card-img-overlay d-flex align-items-end p-2">
-										<button class="btn btn-light fw-medium p-2">
-											{{category.name}}
+			<div class="row g-4 mb-5">
+				{% for subcategory in subcategories %}
+					<a href="{{ path('show_category_slug', { 'slug': subcategory.slug }) }}" class="nav-link">
+						<div class="">
+							<div class="position-relative">
+								<img src="{{ asset('uploads/images/products/categories/' ~ subcategory.id ~ '/CategoryProfileImage/' ~ subcategory.ImgCategory) }}" alt="{{ subcategory.name }}" class="card-img-top" style="object-fit: cover; max-height: 800px">
+								<div class="card-img-overlay d-flex flex-column text-white text-uppercase fw-medium p-5">
+									{% if loop.index == 1 %}
+										<p class="position-absolute bottom-50 start-0 m-0 ms-5" style="font-size: 60px;">{{ subcategory.name }}</p>
+										<button class="btn btn-light text-uppercase fw-medium p-2 position-absolute top-50 start-0 ms-5">
+											Ver más
 										</button>
-									</div>
+									{% elseif loop.index == 2 %}
+										<p class="position-absolute bottom-50 start-50 translate-middle m-0" style="font-size: 60px;">{{ subcategory.name }}</p>
+										<button class="btn btn-light text-uppercase fw-medium position-absolute top-50 start-50 translate-middle">
+											Ver más
+										</button>
+									{% elseif loop.index == 3 %}
+										<p class="position-absolute bottom-50 end-0 m-0 me-5" style="font-size: 60px;">{{ subcategory.name }}</p>
+										<button class="btn btn-light text-uppercase fw-medium p-2 position-absolute top-50 end-0 m-0 me-5">
+											Ver más
+										</button>
+									{% endif %}
 								</div>
 							</div>
-						</a>
-					</div>
+						</div>
+					</a>
 				{% endfor %}
 			</div>
 		</div>
 
+		<div class="container-fluid mb-5">
+			<div class="d-flex justify-content-center">
+				<div id="containerMarcas" class="scroll-container position-relative p-0">
+					<button data-target="containerMarcas" class="position-absolute border-0 bg-transparent scroll-button left">
+						<i class="fa fa-chevron-left bg-light p-2 rounded-circle bg-opacity-75"></i>
+					</button>
+					<button data-target="containerMarcas" class="position-absolute border-0 bg-transparent scroll-button right">
+						<i class="fa fa-chevron-right bg-light p-2 rounded-circle bg-opacity-75"></i>
+					</button>
+					<div class="overflow">
+						<div class="row d-flex flex-nowrap row-cols-3 row-cols-sm-3 row-cols-md-3 row-cols-lg-4 g-2">
+							{% for brand in brands %}
+								<a href="{{ path('brand', { 'slug': brand.slug }) }}" class="nav-link">
+									<div class="card-custom p-0 mx-1 position-relative overflow-hidden" style="max-width: 350px; max-heigth: 350px;">
+										<div class="position-relative">
+											<img src="{{ asset('uploads/images/products/brands/' ~ brand.id ~ '/' ~ brand.imgBrand) }}" alt="logo {{ brand.name }}" class="card-img-top" style="object-fit: cover;">
+										</div>
+										<div class="card-body p-2 pb-0">
+											<p class="card-text m-0 fw-medium fs-5">{{brand.name}}</p>
+										</div>
+									</div>
+								</a>
+							{% endfor %}
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 	</main>
 {% endblock %}

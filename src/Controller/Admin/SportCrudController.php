@@ -7,6 +7,8 @@ use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
 
 class SportCrudController extends AbstractCrudController
@@ -20,10 +22,20 @@ class SportCrudController extends AbstractCrudController
     {
         return [
             IdField::new('id')->onlyOnIndex(),
+            ImageField::new('ImageUrl','Imagen')->hideOnForm(),
             TextField::new('name', 'Nombre')
                 ->setRequired(true)
                 ->setColumns(3)
                 ->setHelp('Este campo es Obligatorio.'),
+            TextField::new('img_sport', 'Imagen')
+                ->setFormType(FileType::class)
+                ->setFormTypeOptions([
+                'required' => false,
+                'data_class' => null,
+                ])
+                ->setHelp('Sube una imagen del deporte.')
+                ->hideOnindex()
+                ->setColumns(3),
             FormField::addPanel(''),
             TextEditorField::new('description', 'Descripcion')->setColumns(6),
         ];

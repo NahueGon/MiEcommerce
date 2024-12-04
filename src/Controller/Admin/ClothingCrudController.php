@@ -63,17 +63,10 @@ class ClothingCrudController extends AbstractProductCrudController
         $fields = parent::configureFields($pageName);
 
         $colorField = TextField::new('color', 'Color')->setColumns(3);
-        $sizeField =  ChoiceField::new('size', 'Talle')
-        ->setChoices([
-            'XS' => 'XS',
-            'S' => 'S',
-            'M' => 'M',
-            'L' => 'L',
-            'XL' => 'XL',
-        ])
-        ->setColumns(3);
 
-        array_splice($fields, 10, 0, [$colorField, $sizeField]);
+        $panelField = FormField::addPanel('');
+
+        array_splice($fields, 9, 0, [$panelField, $colorField, $panelField]);
 
         return $fields;    
     }

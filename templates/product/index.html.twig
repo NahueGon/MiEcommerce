@@ -7,27 +7,40 @@
 {% block body %}
 <main>
     <div class="container my-5 m-auto">
-        <div class="row row-cols-2 row-cols-sm-3 row-cols-lg-4 g-3 justify-content-center justify-content-sm-start">
+        <div class="row row-cols-2 mb-5 row-cols-sm-3 row-cols-lg-4 g-2 justify-content-center justify-content-sm-start">
             {% for product in products %}
                 {% if product.category  != 'Sin Especificar' %}
                     <div class="col-5">
-                        <a href="" class="nav-link">   
-                            <div class="card-custom h-100">
-                                <div class="card-custom">
-                                    <div class="position-relative">
-                                        <img src="{{ asset('uploads/images/products/categories/' ~ product.category.id ~ '/' ~ product.imgProduct) }}" alt="{{ product.name }}" class="card-img-top" style="object-fit: cover;">
-                                        <div class="card-img-overlay d-flex align-items-end px-2">
-                                            <p class="card-title p-2 bg-dark text-white bg-opacity-25 ">
-                                                {{ (product.priceList / 100) | number_format(2, ',', '.') }} ARS
-                                            </p>
-                                        </div>
+                        <a href="{{ path('show_product', { 'slug': product.slug}) }}" class="nav-link">   
+                            <div class="card-custom position-relative overflow-hidden">
+                                {% if product.discount %}
+                                    <span class="text-white custom-flag bg-danger text-uppercase px-2 fw-bold fs-3">
+                                        Sale
+                                    </span>
+                                {% endif %}
+                                <img src="{{ asset('uploads/images/products/categories/' ~ product.category.id ~ '/' ~ product.imgProduct) }}" alt="{{ product.name }}" class="card-img-top" style="object-fit: cover;">
+                                <div class="card-body p-2">
+                                    <div class="d-flex">
+                                        {% if product.salePrice < product.priceList %}
+                                            <span class="fw-medium pe-2">
+                                                {{ (product.salePrice / 100) | number_format(0, ',', '.') }} ARS
+                                            </span>
+                                            <del class="fw-medium text-danger flex-grow-1">
+                                                {{ (product.priceList / 100) | number_format(0, ',', '.') }} ARS
+                                            </del>
+                                        {% else %}
+                                            <span class="fw-medium">
+                                                {{ (product.priceList / 100) | number_format(0, ',', '.') }} ARS
+                                            </span>
+                                        {% endif %}
                                     </div>
-                                    <div class="card-body p-2">
-                                        <p class="card-text m-0 fw-medium">{{product.name}}</p>
-                                        <p class="card-text text-muted">
-                                            {{ product.category }} {{ product.brand }} para {{ product.gender == "Sin Especificar" ? product.sport : product.gender }}
-                                        </p>
-                                    </div>
+                                    {% if product.discount %}
+                                        <span class="fw-medium text-success">{{product.discount}}% de descuento</span>
+                                    {% endif %}
+                                    <p class="card-text m-0 fw-medium">{{product.name}}</p>
+                                    <p class="card-text text-muted">
+                                        {{ product.category }} {{ product.brand }} para {{ product.gender == "Sin Especificar" ? product.sport : product.gender }}
+                                    </p>
                                 </div>
                             </div>
                         </a>
@@ -35,9 +48,8 @@
                 {% endif %}
             {% endfor %}
         </div>
-
-         <!-- Controles de paginación -->
-        <div class="pagination mt-4 d-flex justify-content-center">
+        
+        <div class="pagination d-flex justify-content-center">
             {% if currentPage > 1 %}
                 <a href="{{ path('products', { 'page': currentPage - 1 }) }}" class="btn btn-outline-primary mx-1">Anterior</a>
             {% endif %}

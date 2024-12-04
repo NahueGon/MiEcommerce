@@ -27,6 +27,12 @@ class Brand
     #[ORM\OneToMany(targetEntity: Product::class, mappedBy: 'brand')]
     private Collection $product;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $img_brand = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $slug = null;
+
     public function __construct()
     {
         $this->product = new ArrayCollection();
@@ -94,5 +100,34 @@ class Brand
     public function __toString(): string
     {
         return (string) $this->getName();
+    }
+
+    public function getImgBrand(): ?string
+    {
+        return $this->img_brand;
+    }
+
+    public function setImgBrand(?string $img_brand): static
+    {
+        $this->img_brand = $img_brand;
+
+        return $this;
+    }
+
+    public function getImageUrl(): ?string
+    {
+        return '/uploads/images/products/brands/' . $this->getId() . '/' . $this->img_brand;
+    }
+
+    public function getSlug(): ?string
+    {
+        return $this->slug;
+    }
+
+    public function setSlug(string $slug): static
+    {
+        $this->slug = $slug;
+
+        return $this;
     }
 }

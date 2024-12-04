@@ -6,68 +6,126 @@
 
 {% block body %}
 	<main>
-		<div id="carouselExampleAutoplaying" class="carousel slide mb-5" data-bs-ride="carousel">
-			<div class="carousel-inner">
-				<div class="carousel-item active">
-					<img src="{{ asset('uploads/images/products/categories/' ~ category.id) ~ '/CategoryProfileImage/' ~ category.ImgCategory}}" class="d-block w-100" style="max-height: 700px; object-fit: cover;" alt="...">
+		<div class="position-relative mb-5">
+			<img src="{{ asset('uploads/images/products/categories/' ~ category.id) ~ '/CategoryProfileImage/' ~ category.ImgCategory}}" class="card-img-top" height="490" style="object-fit: cover;" alt="...">
+			<div class="position-absolute top-0 end-0 w-100 h-100 bg-opacity-50 bg-gradient-vertical-top bg-black p-3">
+				<div class="d-flex w-100 h-100 flex-column justify-content-between align-items-center">
+					<div class="col-9">
+						<nav aria-label="breadcrumb bg-transparent">
+							<ol class="breadcrumb breadcrumb-custom overflow-hidden text-center border-0 shadow rounded-3 p-2 m-0">
+								<li class="breadcrumb-item">
+									<a class="link-body-emphasis fw-semibold text-white text-decoration-none" href="/">
+										<i class="fa fa-home" aria-hidden="true"></i>
+										Inicio
+									</a>
+								</li>
+								{% if parent and grandparent %}
+									<li class="breadcrumb-item" aria-current="page">
+										<a class="link-body-emphasis fw-semibold text-white text-decoration-none" href="{{ path('show_category_slug', { 'slug': grandparent.slug }) }}">
+											{{ grandparent.name }}
+										</a>
+									</li>
+									<li class="breadcrumb-item" aria-current="page">
+										<a class="link-body-emphasis fw-semibold text-white text-decoration-none" href="{{ path('show_category_parent', { 'parentSlug': grandparent.slug, 'slug': parent.slug }) }}">
+											{{ parent.name }}
+										</a>
+									</li>
+									<li class="breadcrumb-item" aria-current="page">
+										<a class="link-body-emphasis fw-semibold text-white text-decoration-none" href="{{ path('show_category', { 'grandparentSlug': grandparent.slug, 'parentSlug': parent.slug, 'slug': category.slug }) }}">
+											{{ category.name }}
+										</a>
+									</li>
+								{% elseif parent %}
+									<li class="breadcrumb-item" aria-current="page">
+										<a class="link-body-emphasis fw-semibold text-white text-decoration-none" href="{{ path('show_category_slug', { 'slug': parent.slug }) }}">
+											{{ parent.name }}
+										</a>
+									</li>
+									<li class="breadcrumb-item" aria-current="page">
+										<a class="link-body-emphasis fw-semibold text-white text-decoration-none" href="{{ path('show_category_parent', { 'parentSlug': parent.slug, 'slug': category.slug }) }}">
+											{{ category.name }}
+										</a>
+									</li>
+								{% else %}
+									<li class="breadcrumb-item" aria-current="page">
+										<a class="link-body-emphasis fw-semibold text-white text-decoration-none" href="{{ path('show_category_slug', { 'slug': category.slug }) }}">
+											{{ category.name }}
+										</a>
+									</li>
+								{% endif %}
+							</ol>
+						</nav>
+					</div>
+					<h1 class="display-1 fw-bold text-uppercase text-white mt-5 pt-5" style="letter-spacing: 3px;">{{category.name}}</h1>
+					<div class="col-5 pt-md-0 p-md-5 mb-5 text-white text-center" style="">
+						<p class="lead fw-semibold d-none fs-5 fst-italic d-sm-block">{{category.description}}</p>
+					</div>
 				</div>
-                <div class="position-absolute top-0 end-0 w-100 h-100 bg-opacity-25 bg-gradient-horizontal-top p-3">
-                    <div class="row h-100 justify-content-center">
-                        <div class="col-9">
-                            <nav aria-label="breadcrumb bg-transparent">
-                                <ol class="breadcrumb breadcrumb-custom overflow-hidden text-center border-0 shadow rounded-3 p-2 m-0">
-                                    <li class="breadcrumb-item">
-                                        <a class="link-body-emphasis fw-semibold text-white text-decoration-none" href="/">
-                                            <i class="fa fa-home" aria-hidden="true"></i>
-                                            Inicio
-                                        </a>
-                                    </li>
-                                    {% if parent and grandparent %}
-                                        <li class="breadcrumb-item" aria-current="page">
-                                            <a class="link-body-emphasis fw-semibold text-white text-decoration-none" href="{{ path('show_category_slug', { 'slug': grandparent.slug }) }}">
-                                                {{ grandparent.name }}
-                                            </a>
-                                        </li>
-                                        <li class="breadcrumb-item" aria-current="page">
-                                            <a class="link-body-emphasis fw-semibold text-white text-decoration-none" href="{{ path('show_category_parent', { 'parentSlug': grandparent.slug, 'slug': parent.slug }) }}">
-                                                {{ parent.name }}
-                                            </a>
-                                        </li>
-                                        <li class="breadcrumb-item" aria-current="page">
-                                            <a class="link-body-emphasis fw-semibold text-white text-decoration-none" href="{{ path('show_category', { 'grandparentSlug': grandparent.slug, 'parentSlug': parent.slug, 'slug': category.slug }) }}">
-                                                {{ category.name }}
-                                            </a>
-                                        </li>
-                                    {% elseif parent %}
-                                        <li class="breadcrumb-item" aria-current="page">
-                                            <a class="link-body-emphasis fw-semibold text-white text-decoration-none" href="{{ path('show_category_slug', { 'slug': parent.slug }) }}">
-                                                {{ parent.name }}
-                                            </a>
-                                        </li>
-                                        <li class="breadcrumb-item" aria-current="page">
-                                            <a class="link-body-emphasis fw-semibold text-white text-decoration-none" href="{{ path('show_category_parent', { 'parentSlug': parent.slug, 'slug': category.slug }) }}">
-                                                {{ category.name }}
-                                            </a>
-                                        </li>
-                                    {% else %}
-                                        <li class="breadcrumb-item" aria-current="page">
-                                            <a class="link-body-emphasis fw-semibold text-white text-decoration-none" href="{{ path('show_category_slug', { 'slug': category.slug }) }}">
-                                                {{ category.name }}
-                                            </a>
-                                        </li>
-                                    {% endif %}
-                               </ol>
-                            </nav>
-                        </div>
-                        <div class="col-md-5 d-flex flex-column p-lg-5 justify-content-end my-5 text-white">
-                            <h1 class="display-4 fw-normal text-center">{{category.name}}</h1>
-                            <p class="lead fw-normal d-none d-sm-block">And an even wittier subheading to boot. Jumpstart your marketing efforts with this example based on Apple’s marketing pages.</p>
-                            <a class="btn btn-outline-secondary" href="#">Ofertas</a>
-                        </div>
-                    </div>
-                </div>
 			</div>
 		</div>
-    </main>
 
-		{% endblock %}
+		<div class="container mb-5">
+			<div class="d-flex justify-content-between py-3">
+				<h3>{{category.name}}</h3>
+				<a href="{{ path('products') }}" class="btn btn-primary" role="button">Ver todo</a>
+			</div>
+			<div class="d-flex justify-content-center">
+				<div id="containerProductos" class="scroll-container position-relative">
+					<button data-target="containerProductos" class="position-absolute border-0 bg-transparent scroll-button left">
+						<i class="fa fa-chevron-left bg-light p-2 rounded-circle bg-opacity-75"></i>
+					</button>
+					<button data-target="containerProductos" class="position-absolute border-0 bg-transparent scroll-button right">
+						<i class="fa fa-chevron-right bg-light p-2 rounded-circle bg-opacity-75"></i>
+					</button>
+					<div class="overflow">
+						<div class="row d-flex flex-nowrap row-cols-3 row-cols-sm-3 row-cols-md-3 row-cols-lg-4 g-2">
+							{% for product in products %}
+								{% if product.category  != 'Sin Especificar' %}
+										<div class="card-custom p-0 mx-1 position-relative overflow-hidden" style="max-width: 318px;">
+											<a href="{{ path('show_product', { 'slug': product.slug}) }}" class="nav-link">
+												{% if product.discount %}
+													<span class="text-white custom-flag bg-danger text-uppercase px-2 fw-bold fs-3">
+														Sale
+													</span>
+												{% endif %}
+												<img src="{{ asset('uploads/images/products/categories/' ~ product.category.id ~ '/' ~ product.imgProduct) }}" alt="{{ product.name }}" class="card-img-top h-100" style="object-fit: cover;">
+												<div class="card-body p-2">
+													<div class="d-flex">
+														{% if product.salePrice < product.priceList %}
+															<span class="fw-medium pe-2">
+																{{ (product.salePrice / 100) | number_format(0, ',', '.') }}
+																ARS
+															</span>
+															<del class="text-danger fw-medium flex-grow-1">
+																{{ (product.priceList / 100) | number_format(0, ',', '.') }}
+																ARS
+															</del>
+														{% else %}
+															<span class="fw-medium">
+																{{ (product.priceList / 100) | number_format(0, ',', '.') }}
+																ARS
+															</span>
+														{% endif %}
+													</div>
+													{% if product.discount %}
+														<span class="fw-medium text-success">{{product.discount}}% de descuento</span>
+													{% endif %}
+													<p class="card-text m-0 fw-medium">{{product.name}}</p>
+													<p class="card-text text-muted">
+														{{ product.category }}
+														{{ product.brand }}
+														para
+														{{ product.gender == "Sin Especificar" ? product.sport : product.gender }}
+													</p>
+												</div>
+											</a>
+										</div>
+								{% endif %}
+							{% endfor %}
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+{% endblock %}

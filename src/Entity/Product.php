@@ -5,7 +5,7 @@ namespace App\Entity;
 use App\Repository\ProductRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-
+use Cocur\Slugify\Slugify;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\Constraints\Regex;
@@ -50,9 +50,6 @@ abstract class Product
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $updated_at = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?float $price_sale = null;
-
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $gender = null;
 
@@ -61,6 +58,13 @@ abstract class Product
 
     #[ORM\ManyToOne(inversedBy: 'product')]
     private ?Brand $brand = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Assert\Range(min: 0, max: 100, notInRangeMessage: 'El descuento debe estar entre 0 y 100.')]
+    private ?float $discount = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $slug = null;
 
     public function __construct()
     {
@@ -186,18 +190,6 @@ abstract class Product
         return $this;
     }
 
-    public function getPriceSale(): ?float
-    {
-        return $this->price_sale;
-    }
-
-    public function setPriceSale(?float $price_sale): static
-    {
-        $this->price_sale = $price_sale;
-
-        return $this;
-    }
-
     public static function loadValidatorMetadata(ClassMetadata $metadata): void
     {
         $metadata->addPropertyConstraint('name', new Assert\NotBlank([
@@ -229,15 +221,6 @@ abstract class Product
             'minMessage' => 'El Precio de lista debe tener al menos 1 numero',
         ]));
         $metadata->addPropertyConstraint('price_list', new Regex([
-            'pattern' => '/^\d+(\.\d{1,2})?$/',
-            'message' => 'El Precio de lista solo debe contener numeros',
-        ]));
-
-        $metadata->addPropertyConstraint('price_sale', new Assert\Length([
-            'min' => 1,
-            'minMessage' => 'El Precio final debe tener al menos 1 numero',
-        ]));
-        $metadata->addPropertyConstraint('price_sale', new Regex([
             'pattern' => '/^\d+(\.\d{1,2})?$/',
             'message' => 'El Precio de lista solo debe contener numeros',
         ]));
@@ -298,6 +281,40 @@ abstract class Product
     public function setBrand(?Brand $brand): static
     {
         $this->brand = $brand;
+
+        return $this;
+    }
+
+    public function getDiscount(): ?float
+    {
+        return $this->discount;
+    }
+
+    public function setDiscount(?float $discount): static
+    {
+        $this->discount = $discount;
+
+        return $this;
+    }
+
+    public function getSalePrice(): float
+    {
+        if ($this->discount === null) {
+            return $this->price_list; 
+        }
+
+        return $this->price_list * (1 - $this->discount / 100);
+    }
+
+    public function getSlug(): ?string
+    {
+        return $this->slug;
+    }
+
+    public function setSlug(string $name): self
+    {
+        $slugify = new Slugify();
+        $this->slug = $slugify->slugify($name);
 
         return $this;
     }

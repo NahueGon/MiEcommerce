@@ -13,6 +13,7 @@ use App\Repository\CategoryRepository;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AvatarField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\PercentField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
@@ -85,18 +86,18 @@ abstract class AbstractProductCrudController extends AbstractCrudController
             FormField::addPanel(''),
             AssociationField::new('brand', 'Marca')
                 ->setColumns(3),
-            ChoiceField::new('gender', 'Género')
+                ChoiceField::new('gender', 'Género')
                 ->setColumns(3)
                 ->setRequired(false)
                 ->setChoices(function() {
                     $choices = [];
                     
                     $categoriesWithoutParents = $this->em
-                        ->getRepository(Category::class)
-                        ->createQueryBuilderForCategoriesWithoutParents()
-                        ->getQuery()
-                        ->getResult();
-            
+                    ->getRepository(Category::class)
+                    ->createQueryBuilderForCategoriesWithoutParents()
+                    ->getQuery()
+                    ->getResult();
+                    
                     if ($categoriesWithoutParents) {
                         foreach ($categoriesWithoutParents as $category) {
                             $choices[$category->getName()] = $category->getName();
@@ -104,17 +105,22 @@ abstract class AbstractProductCrudController extends AbstractCrudController
                     } else {
                         $choices['Sin categoría'] = 'Sin categoría';
                     }
-            
+                    
                     return $choices;
                 }),
             AssociationField::new('sport', 'Deporte')
                 ->setColumns(3),
             FormField::addPanel(''),
             MoneyField::new('price_list', 'Precio de Lista')
-                ->setCurrency('ARS')
+            ->setCurrency('ARS')
                 ->setRequired(true)
                 ->setColumns(3)
                 ->setHelp('Este campo es Obligatorio.'),
+            PercentField::new('discount', 'Descuento (%)')
+                ->setStoredAsFractional(false) // False si trabajas con porcentajes como 20 (en lugar de 0.2)
+                ->setHelp('Introduce el porcentaje de descuento (ej. 20 para 20%).')
+                ->setColumns(3)
+                ->setRequired(false)
         ];
 
         if (Crud::PAGE_NEW === $pageName) {
@@ -187,11 +193,14 @@ abstract class AbstractProductCrudController extends AbstractCrudController
 
             $request = $this->requestStack->getCurrentRequest();
             $imgProductFile = $request->files->get($productType)['img_product'];
-
+            
             try {
                 $em->persist($product);
                 $em->flush();
                 
+                $slug = $product->category() . '-' . $product->name() . '-' . $product->id();
+                $product->setSlug($slug);
+
                 $this->imageUpload($product, $imgProductFile);
                 flash()
                 ->title('Exito!')
@@ -213,7 +222,7 @@ abstract class AbstractProductCrudController extends AbstractCrudController
     public function sanitizeProduct(Product $product): void{
         $name = strip_tags($product->getName());
         $product->setName($name);
-
+        
         if ($description = $product->getDescription()) {
             $sanitizedDescription = preg_replace('/\s+/', ' ', strip_tags(str_replace('&nbsp;', ' ', $description)));
             $product->setDescription($sanitizedDescription);
@@ -345,7 +354,7 @@ abstract class AbstractProductCrudController extends AbstractCrudController
         }
     }
 
-    private function uploadAndResizeImage(UploadedFile $imgProductFile, string $targetPath, int $size = 300): void
+    private function uploadAndResizeImage(UploadedFile $imgProductFile, string $targetPath, int $size = 500): void
     {
         $originalImage = imagecreatefromstring(file_get_contents($imgProductFile->getPathname()));
         list($originalWidth, $originalHeight) = getimagesize($imgProductFile->getPathname());

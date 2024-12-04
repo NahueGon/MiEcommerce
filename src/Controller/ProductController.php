@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Product;
 use App\Repository\ProductRepository;
+use App\Repository\CategoryRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -21,7 +22,7 @@ class ProductController extends AbstractController
 
         $products = $productRepository->findBy([], null, $productsPerPage, $offset);
 
-        shuffle($products);  // Mezcla los productos aleatoriamente
+        // shuffle($products);  // Mezcla los productos aleatoriamente
         // $products = array_slice($products, 0, 10);  // Toma solo los primeros 10
 
         return $this->render('product/index.html.twig', [
@@ -30,15 +31,19 @@ class ProductController extends AbstractController
             'currentPage' => $page,
             'totalPages' => $totalPages,
         ]);
+
     }
 
     #[Route('/p/{slug}', name: 'show_product')]
-    public function show(string $slug): Response
-    {
-        
+    public function show(
+        string $slug,
+        ProductRepository $productRepository,
+    ): Response{
+
+        $product = $productRepository->findOneBy(['slug' => $slug]);
 
         return $this->render('product/detail.html.twig', [
-            'controller_name' => 'ProductController',
+            'product' => $product
         ]);
     }
 }

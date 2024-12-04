@@ -4,6 +4,8 @@ namespace App\Controller;
 
 use App\Entity\Category;
 use App\Repository\CategoryRepository;
+use App\Repository\SportRepository;
+use App\Repository\ProductRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -40,8 +42,13 @@ class CategoryController extends AbstractController
     #[Route('/c/{slug}', name: 'show_category_slug')]
     #[Route('/c/{parentSlug}/{slug}', name: 'show_category_parent')]
     #[Route('/c/{grandparentSlug}/{parentSlug}/{slug}', name: 'show_category')]
-    public function show(?string $grandparentSlug, ?string $parentSlug, string $slug): Response
-    {
+    public function show(
+        ?string $grandparentSlug,
+        ?string $parentSlug,
+        string $slug,
+        SportRepository $sportRepository,
+        ProductRepository $productRepository,
+    ): Response {
         $grandparent = null;
         $parent = null;
         
@@ -62,7 +69,18 @@ class CategoryController extends AbstractController
         }
 
         $category = $this->categoryRepository->findOneBy(['slug' => $slug]);
+
+        $sports = $sportRepository->findAll();
+        shuffle($sports);
         
+        $discountedProducts = $productRepository->findWithDiscounts();
+        shuffle($discountedProducts);
+        $discountedProducts = array_slice($discountedProducts, 0, 1);
+
+        $products = $productRepository->findBy(['gender' => $slug]);
+        shuffle($products);  // Mezcla los productos aleatoriamente
+        $products = array_slice($products, 0, 10); 
+
         if (!$category) {
             throw $this->createNotFoundException('Categoría no encontrada');
         }
@@ -70,6 +88,9 @@ class CategoryController extends AbstractController
             'category' => $category,
             'parent' => $parent,
             'grandparent' => $grandparent,
+            'sports' => $sports,
+            'products' => $products,
+            'discountedProducts' => $discountedProducts,
         ]);
     }
 }

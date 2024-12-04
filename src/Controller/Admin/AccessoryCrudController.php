@@ -63,6 +63,8 @@ class AccessoryCrudController extends AbstractProductCrudController
         $fields = parent::configureFields($pageName);
         $colorField = TextField::new('color', 'Color')->setColumns(3);
 
+        $panelField = FormField::addPanel('');
+
         array_splice($fields, 10, 0, [$colorField]);
 
         return $fields;    

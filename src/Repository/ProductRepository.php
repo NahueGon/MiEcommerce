@@ -16,6 +16,15 @@ class ProductRepository extends ServiceEntityRepository
         parent::__construct($registry, Product::class);
     }
 
+    public function findWithDiscounts(): array
+    {
+        return $this->createQueryBuilder('p')
+            ->where('p.discount IS NOT NULL')
+            ->andWhere('p.discount > 0')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return Product[] Returns an array of Product objects
     //     */
