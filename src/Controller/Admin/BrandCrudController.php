@@ -10,12 +10,22 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 
 class BrandCrudController extends AbstractCrudController
 {
     public static function getEntityFqcn(): string
     {
         return Brand::class;
+    }
+
+    public function configureCrud(Crud $crud): Crud
+    {
+        return $crud
+            ->setEntityLabelInSingular('Marca')
+            ->setEntityLabelInPlural('Marcas')
+            ->setSearchFields(['name', 'description'])
+            ->setDefaultSort(['id' => 'ASC']);
     }
     
     public function configureFields(string $pageName): iterable

@@ -81,11 +81,9 @@ abstract class AbstractProductCrudController extends AbstractCrudController
                                   ->createQueryBuilderForCategoriesWithoutSubCategories();
                     },
                 ]),
-            IntegerField::new('stock', 'Cantidad')
+                AssociationField::new('brand', 'Marca')
                 ->setColumns(3),
             FormField::addPanel(''),
-            AssociationField::new('brand', 'Marca')
-                ->setColumns(3),
                 ChoiceField::new('gender', 'Género')
                 ->setColumns(3)
                 ->setRequired(false)
@@ -110,22 +108,36 @@ abstract class AbstractProductCrudController extends AbstractCrudController
                 }),
             AssociationField::new('sport', 'Deporte')
                 ->setColumns(3),
-            FormField::addPanel(''),
             MoneyField::new('price_list', 'Precio de Lista')
-            ->setCurrency('ARS')
+                ->setCurrency('ARS')
                 ->setRequired(true)
                 ->setColumns(3)
                 ->setHelp('Este campo es Obligatorio.'),
+            FormField::addPanel(''),
             PercentField::new('discount', 'Descuento (%)')
                 ->setStoredAsFractional(false) // False si trabajas con porcentajes como 20 (en lugar de 0.2)
                 ->setHelp('Introduce el porcentaje de descuento (ej. 20 para 20%).')
                 ->setColumns(3)
-                ->setRequired(false)
+                ->setRequired(false),
+            TextField::new('img_product', 'Imagen del Producto')
+                ->formatValue(function ($value, $entity) {
+                    if ($value) {
+                        // Aquí obtenemos la URL completa de la imagen
+                        $imageUrl = '/uploads/images/products/categories/' . $entity->getCategory()->getId() . '/' . $value;
+    
+                        // Mostramos la imagen como HTML
+                        return sprintf('<img src="%s" alt="Producto" style="max-height: 150px;"/>', $imageUrl);
+                    }
+    
+                    return 'No hay imagen disponible';
+                })
+                ->renderAsHtml()
+                ->onlyOnForms()
         ];
 
         if (Crud::PAGE_NEW === $pageName) {
             $fields[] = FormField::addPanel('');
-            $fields[] =
+            $fields[] = 
             TextField::new('img_product', 'Imagen')
                 ->setColumns(3)
                 ->setFormType(FileType::class)
@@ -136,7 +148,6 @@ abstract class AbstractProductCrudController extends AbstractCrudController
                 ->setHelp('Sube una imagen para el Producto.');
         
         } elseif (Crud::PAGE_EDIT === $pageName){
-            $fields[] = FormField::addPanel('');
             $fields[] =
             TextField::new('img_product', 'Imagen')
                 ->setColumns(3)
@@ -354,7 +365,7 @@ abstract class AbstractProductCrudController extends AbstractCrudController
         }
     }
 
-    private function uploadAndResizeImage(UploadedFile $imgProductFile, string $targetPath, int $size = 500): void
+    private function uploadAndResizeImage(UploadedFile $imgProductFile, string $targetPath, int $size = 600): void
     {
         $originalImage = imagecreatefromstring(file_get_contents($imgProductFile->getPathname()));
         list($originalWidth, $originalHeight) = getimagesize($imgProductFile->getPathname());

@@ -10,12 +10,22 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
+use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 
 class SportCrudController extends AbstractCrudController
 {
     public static function getEntityFqcn(): string
     {
         return Sport::class;
+    }
+
+    public function configureCrud(Crud $crud): Crud
+    {
+        return $crud
+            ->setEntityLabelInSingular('Deporte')
+            ->setEntityLabelInPlural('Deportes')
+            ->setSearchFields(['name', 'description'])
+            ->setDefaultSort(['id' => 'ASC']);
     }
 
     public function configureFields(string $pageName): iterable

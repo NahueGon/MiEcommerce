@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\ProductRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Cocur\Slugify\Slugify;
@@ -40,9 +42,6 @@ abstract class Product
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
-
-    #[ORM\Column(nullable: true, options: ["default" => 0])]
-    private ?int $stock = 0;
 
     #[ORM\ManyToOne(inversedBy: 'products')]
     private ?Category $category = null;
@@ -154,16 +153,13 @@ abstract class Product
         return '/uploads/images/products/categories/' . $this->getCategory()->getId() . '/' . $this->img_product;
     }
 
-    public function getStock(): ?int
+    public function getImagePreview(): ?string
     {
-        return $this->stock;
-    }
-
-    public function setStock(?int $stock): static
-    {
-        $this->stock = $stock;
-
-        return $this;
+        if ($this->img_product) {
+            $imageUrl = '/uploads/images/products/categories/' . $this->getCategory()->getId() . '/' . $this->img_product;
+            return sprintf('<img src="%s" alt="Producto" style="max-height: 150px;">', $imageUrl);
+        }
+        return '<p>No hay imagen disponible</p>';
     }
 
     public function getCategory(): ?Category
@@ -202,15 +198,6 @@ abstract class Product
         $metadata->addPropertyConstraint('name', new Regex([
             'pattern' => '/^[a-zA-Z0-9\s\'_-]+$/',
             'message' => 'El nombre solo debe contener letras',
-        ]));
-
-        $metadata->addPropertyConstraint('stock', new Assert\Length([
-            'min' => 1,
-            'minMessage' => 'La Cantidad debe tener al menos 1 numero',
-        ]));
-        $metadata->addPropertyConstraint('stock', new Regex([
-            'pattern' => '/^\d+$/',
-            'message' => 'La Cantidad  solo debe contener numeros',
         ]));
 
         $metadata->addPropertyConstraint('price_list', new Assert\NotBlank([

@@ -5,6 +5,7 @@ namespace App\Controller\Admin;
 use App\Entity\Shoe;
 use App\Entity\Product;
 use App\Entity\Category;
+use App\Form\SizeStockType;
 use App\Repository\CategoryRepository;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
@@ -13,7 +14,9 @@ use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
+use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use EasyCorp\Bundle\EasyAdminBundle\Field\MoneyField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\CollectionField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\NumberField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\FormField;
@@ -101,12 +104,22 @@ class ShoeCrudController extends AbstractProductCrudController
                 'Celeste' => 'lightblue',
             ])
             ->allowMultipleChoices(true)
-            ->renderExpanded(false) // Cambia a true para mostrar como checkboxes en lugar de un menú desplegable
+            ->renderExpanded(false)
             ->setColumns(3);
+
+        $sizeField = CollectionField::new('sizes', 'Talles')
+            ->setEntryType(SizeStockType::class)
+            ->allowAdd()
+            ->allowDelete()
+            ->hideOnIndex()
+            ->setColumns(3);
+
+        $totalSizeField = IntegerField::new('totalStock', 'Total Stock')
+            ->onlyOnIndex();
 
         $panelField = FormField::addPanel('');
 
-        array_splice($fields, 9, 0, [$panelField, $colorField, $panelField]);
+        array_splice($fields, 11, 0, [$colorField, $sizeField, $totalSizeField, $panelField]);
 
         return $fields;    
     }

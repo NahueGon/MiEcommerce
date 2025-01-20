@@ -2,22 +2,22 @@
 
 namespace App\Repository;
 
-use App\Entity\Size;
+use App\Entity\SizeStock;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<Size>
+ * @extends ServiceEntityRepository<SizeStock>
  */
-class SizeRepository extends ServiceEntityRepository
+class SizeStockRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, Size::class);
+        parent::__construct($registry, SizeStock::class);
     }
 
     //    /**
-    //     * @return Size[] Returns an array of Size objects
+    //     * @return SizeStock[] Returns an array of SizeStock objects
     //     */
     //    public function findByExampleField($value): array
     //    {
@@ -31,7 +31,7 @@ class SizeRepository extends ServiceEntityRepository
     //        ;
     //    }
 
-    //    public function findOneBySomeField($value): ?Size
+    //    public function findOneBySomeField($value): ?SizeStock
     //    {
     //        return $this->createQueryBuilder('s')
     //            ->andWhere('s.exampleField = :val')

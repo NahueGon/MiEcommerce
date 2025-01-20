@@ -245,16 +245,16 @@
 					<div class="overflow">
 						<div class="row d-flex flex-nowrap row-cols-3 row-cols-sm-3 row-cols-md-3 row-cols-lg-4 g-2">
 							{% for brand in brands %}
-								<a href="{{ path('brand', { 'slug': brand.slug }) }}" class="nav-link">
-									<div class="card-custom p-0 mx-1 position-relative overflow-hidden" style="max-width: 350px; max-heigth: 350px;">
+								<div class="card-custom p-0 mx-1 position-relative overflow-hidden" style="max-width: 350px; max-heigth: 350px;">
+									<a href="{{ path('brand', { 'slug': brand.slug }) }}" class="nav-link">
 										<div class="position-relative">
 											<img src="{{ asset('uploads/images/products/brands/' ~ brand.id ~ '/' ~ brand.imgBrand) }}" alt="logo {{ brand.name }}" class="card-img-top" style="object-fit: cover;">
 										</div>
 										<div class="card-body p-2 pb-0">
 											<p class="card-text m-0 fw-medium fs-5">{{brand.name}}</p>
 										</div>
-									</div>
-								</a>
+									</a>
+								</div>
 							{% endfor %}
 						</div>
 					</div>

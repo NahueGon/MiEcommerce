@@ -10,6 +10,7 @@ use App\Entity\Brand;
 use App\Entity\Shoe;
 use App\Entity\Clothing;
 use App\Entity\Accessory;
+use App\Entity\SizeStock;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
@@ -69,9 +70,10 @@ class DashboardController extends AbstractDashboardController
             MenuItem::linkToCrud('Zapatillas', 'fa-solid fa-shoe-prints', Shoe::class),
             MenuItem::linkToCrud('Ropa', 'fa-solid fa-shirt', Clothing::class),
             MenuItem::linkToCrud('Accesorios', 'fa-solid fa-hat-cowboy', Accessory::class),
+            MenuItem::section('Configuracion'),
             MenuItem::linkToCrud('Categorias', 'fa fa-th-list', Category::class),
             MenuItem::linkToCrud('Deportes', 'fa-solid fa-basketball', Sport::class),
-            MenuItem::linkToCrud('Marcas', 'fa-brands fa-bandcamp', Brand::class),
+            MenuItem::linkToCrud('Marcas', 'fa-brands fa-hive', Brand::class),
         ];
     }
 

@@ -68,6 +68,6 @@ class ClothingCrudController extends AbstractProductCrudController
 
         array_splice($fields, 9, 0, [$panelField, $colorField, $panelField]);
 
-        return $fields;    
+        return $fields;
     }
 }
